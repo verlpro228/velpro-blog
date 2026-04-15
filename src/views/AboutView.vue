@@ -34,7 +34,7 @@ const profile = {
 const contacts: ContactItem[] = [
   { label: '手机号', value: '17651707339' },
   { label: '邮箱', value: 'k2280406@163.com' },
-  { label: 'GitHub', value: 'https://github.com/' },
+  { label: 'GitHub', value: 'https://github.com/verlpro228/velpro-blog' },
   { label: '博客', value: '站内知识库', href: '/knowledge' },
 ]
 
@@ -147,19 +147,11 @@ const timeline: TimelineItem[] = [
           <section class="app-card rounded-[1.75rem] p-5 sm:p-7">
             <h2 class="app-heading text-lg font-semibold">联系方式</h2>
             <div class="mt-5 space-y-4">
-              <div
-                v-for="item in contacts"
-                :key="item.label"
-                class="resume-side-card rounded-2xl px-4 py-3"
-              >
+              <div v-for="item in contacts" :key="item.label" class="resume-side-card rounded-2xl px-4 py-3">
                 <p class="app-caption text-xs uppercase tracking-[0.18em]">{{ item.label }}</p>
-                <a
-                  v-if="item.href"
-                  :href="item.href"
-                  class="resume-side-link app-copy mt-2 block break-all text-sm font-medium"
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <a v-if="item.href" :href="item.href"
+                  class="resume-side-link app-copy mt-2 block break-all text-sm font-medium" target="_blank"
+                  rel="noreferrer">
                   {{ item.value }}
                 </a>
                 <p v-else class="resume-side-value app-copy mt-2 text-sm font-medium">{{ item.value }}</p>
@@ -170,11 +162,7 @@ const timeline: TimelineItem[] = [
           <section class="app-card rounded-[1.75rem] p-5 sm:p-7">
             <h2 class="app-heading text-lg font-semibold">专业技能</h2>
             <div class="mt-5 space-y-5">
-              <div
-                v-for="group in skillGroups"
-                :key="group.title"
-                class="resume-side-card rounded-2xl px-4 py-4"
-              >
+              <div v-for="group in skillGroups" :key="group.title" class="resume-side-card rounded-2xl px-4 py-4">
                 <p class="app-caption text-xs uppercase tracking-[0.18em]">{{ group.title }}</p>
                 <ul class="mt-3 space-y-2">
                   <li v-for="item in group.items" :key="item" class="resume-skill-item app-copy text-sm leading-6">
@@ -194,20 +182,13 @@ const timeline: TimelineItem[] = [
             </div>
 
             <div class="space-y-5">
-              <article
-                v-for="project in projectExperiences"
-                :key="project.name"
-                class="app-card-strong rounded-[1.5rem] p-5 sm:p-6"
-              >
+              <article v-for="project in projectExperiences" :key="project.name"
+                class="app-card-strong rounded-[1.5rem] p-5 sm:p-6">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 class="app-heading text-lg font-semibold sm:text-xl">{{ project.name }}</h3>
                     <div class="mt-4 flex flex-wrap gap-2">
-                      <span
-                        v-for="stack in project.techStacks"
-                        :key="stack"
-                        class="app-tag-pill px-3 py-1 text-xs"
-                      >
+                      <span v-for="stack in project.techStacks" :key="stack" class="app-tag-pill px-3 py-1 text-xs">
                         {{ stack }}
                       </span>
                     </div>
@@ -228,11 +209,8 @@ const timeline: TimelineItem[] = [
             <p class="app-overline text-xs uppercase tracking-[0.28em]">教育背景</p>
             <h2 class="app-heading mt-3 text-2xl font-semibold">教育背景</h2>
             <div class="mt-6 space-y-4">
-              <div
-                v-for="item in educationList"
-                :key="`${item.school}-${item.period}`"
-                class="app-card-strong rounded-[1.5rem] p-5 sm:p-6"
-              >
+              <div v-for="item in educationList" :key="`${item.school}-${item.period}`"
+                class="app-card-strong rounded-[1.5rem] p-5 sm:p-6">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 class="app-heading text-lg font-semibold">{{ item.school }}</h3>
@@ -248,11 +226,7 @@ const timeline: TimelineItem[] = [
             <p class="app-overline text-xs uppercase tracking-[0.28em]">成长路径</p>
             <h2 class="app-heading mt-3 text-2xl font-semibold">技术成长路径</h2>
             <div class="resume-timeline mt-6">
-              <article
-                v-for="item in timeline"
-                :key="item.id"
-                class="resume-timeline-item relative pl-6 sm:pl-8"
-              >
+              <article v-for="item in timeline" :key="item.id" class="resume-timeline-item relative pl-6 sm:pl-8">
                 <div class="resume-timeline-node absolute left-0 top-2 h-3.5 w-3.5 rounded-full" />
                 <div class="app-card-strong rounded-2xl p-5">
                   <p class="app-overline text-xs uppercase tracking-[0.18em]">{{ item.period }}</p>
@@ -305,7 +279,7 @@ const timeline: TimelineItem[] = [
   background: var(--color-border);
 }
 
-.resume-timeline-item + .resume-timeline-item {
+.resume-timeline-item+.resume-timeline-item {
   margin-top: 1.25rem;
 }
 
