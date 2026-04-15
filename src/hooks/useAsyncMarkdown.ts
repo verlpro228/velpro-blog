@@ -1,23 +1,5 @@
 import { ref, watch, type Ref } from 'vue'
-
-let markdownModulePromise: Promise<typeof import('@/utils/markdown')> | null = null
-let markdownStylePromise: Promise<unknown> | null = null
-
-function loadMarkdownModule() {
-  if (!markdownModulePromise) {
-    markdownModulePromise = import('@/utils/markdown')
-  }
-
-  return markdownModulePromise
-}
-
-function loadMarkdownStyle() {
-  if (!markdownStylePromise) {
-    markdownStylePromise = import('highlight.js/styles/atom-one-dark.css')
-  }
-
-  return markdownStylePromise
-}
+import { injectHeadingIds, renderMarkdown } from '@/utils/markdown'
 
 export function useAsyncMarkdown(source?: Ref<string>) {
   const html = ref('')
@@ -28,11 +10,11 @@ export function useAsyncMarkdown(source?: Ref<string>) {
     loading.value = true
 
     try {
-      const [{ renderMarkdown, injectHeadingIds }] = await Promise.all([
-        loadMarkdownModule(),
-        loadMarkdownStyle(),
-      ])
       html.value = injectHeadingIds(renderMarkdown(content))
+      ready.value = true
+    } catch (error) {
+      console.error('[markdown] render failed.', error)
+      html.value = injectHeadingIds(renderMarkdown(content ?? ''))
       ready.value = true
     } finally {
       loading.value = false
@@ -40,7 +22,6 @@ export function useAsyncMarkdown(source?: Ref<string>) {
   }
 
   const warmup = async () => {
-    await Promise.all([loadMarkdownModule(), loadMarkdownStyle()])
     ready.value = true
   }
 

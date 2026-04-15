@@ -4,6 +4,7 @@ import router from './router'
 import pinia from './store'
 import { useTheme } from './hooks/useTheme'
 import './styles/index.css'
+import 'highlight.js/styles/atom-one-dark.css'
 
 const { initializeTheme } = useTheme()
 initializeTheme()
