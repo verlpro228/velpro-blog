@@ -1,0 +1,20 @@
+{
+  "name": "sass-embedded-android-arm",
+  "version": "1.99.0",
+  "description": "The android-arm binary for sass-embedded",
+  "repository": "sass/embedded-host-node",
+  "author": "Google Inc.",
+  "license": "MIT",
+  "files": [
+    "dart-sass/**/*"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "os": [
+    "android"
+  ],
+  "cpu": [
+    "arm"
+  ]
+}

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="512" height="512">
+  <defs>
+    <!-- 渐变定义 -->
+    <linearGradient id="purpleLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8d5ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b066ff;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="purpleDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9933ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4a0082;stop-opacity:1" />
+    </linearGradient>
+    <!-- 发光滤镜 -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 外框主体 - 下部分 -->
+  <g filter="url(#glow)">
+    <path d="M 260 570 L 500 750 L 740 570 L 740 470 L 500 650 L 260 470 Z" 
+          fill="url(#purpleDark)" stroke="#ffffff" stroke-width="3" opacity="0.9"/>
+  </g>
+
+  <!-- 外框主体 - 上部分 -->
+  <g filter="url(#glow)">
+    <path d="M 450 250 L 710 390 L 500 550 L 290 410 Z" 
+          fill="url(#purpleLight)" stroke="#ffffff" stroke-width="3" opacity="0.95"/>
+  </g>
+
+  <!-- 中间代码/波形符号 -->
+  <g filter="url(#softGlow)">
+    <path d="M 400 510 L 490 400 L 500 560 L 780 370" 
+          fill="none" stroke="url(#purpleLight)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 像素块/代码符号 -->
+  <g filter="url(#softGlow)">
+    <rect x="330" y="310" width="140" height="140" fill="url(#purpleDark)" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <rect x="355" y="335" width="30" height="30" fill="url(#purpleLight)" rx="2"/>
+    <rect x="395" y="335" width="30" height="30" fill="url(#purpleLight)" rx="2"/>
+    <rect x="435" y="335" width="30" height="30" fill="url(#purpleLight)" rx="2"/>
+    <rect x="355" y="375" width="30" height="30" fill="url(#purpleLight)" rx="2"/>
+    <rect x="435" y="375" width="30" height="30" fill="url(#purpleLight)" rx="2"/>
+    <rect x="395" y="415" width="30" height="30" fill="url(#purpleLight)" rx="2"/>
+  </g>
+
+  <!-- 左侧装饰条 -->
+  <g filter="url(#softGlow)">
+    <rect x="260" y="370" width="40" height="80" fill="url(#purpleLight)" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <rect x="260" y="435" width="40" height="50" fill="url(#purpleLight)" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <rect x="260" y="480" width="40" height="70" fill="url(#purpleLight)" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <rect x="310" y="470" width="30" height="40" fill="url(#purpleLight)" stroke="#ffffff" stroke-width="2" rx="4"/>
+  </g>
+</svg>
