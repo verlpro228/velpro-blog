@@ -22,7 +22,7 @@ const projects: ProjectCard[] = [
     cover: '',
     techStacks: ['Vue 3', 'Vite', 'Element Plus', 'Pinia', 'Vue Router', 'SCSS', 'ECharts', 'Axios', 'WangEditor', 'SSE'],
     category: 'AI 服务平台',
-    period: '2025.12 - 2026.03',
+    period: '2026.1 - 2026.03',
     role: '独立负责前端架构设计与核心功能开发，覆盖用户端与后台管理端页面搭建、数据流组织、权限体系与 AI 交互体验实现。',
     highlights: ['SSE 流式 AI 对话', '情绪识别与四级风险预警', '情绪日记 + 知识库 CMS + 数据分析后台'],
     features: [
@@ -44,13 +44,13 @@ const projects: ProjectCard[] = [
   },
   {
     id: 'smart-service-platform',
-    title: 'Vue3 企业级智能工单与服务预约管理平台',
+    title: '企业级智能工单与服务预约管理平台',
     summary:
       '一套面向企业客户及内部运营的高效服务调度系统，包含 H5 客户服务端与 PC 运营管理端，覆盖服务预约、工单流转、人员调度、权限控制与数据监控。',
     cover: '',
     techStacks: ['Vue 3', 'Vite', 'Vant 4', 'Element Plus', 'Vue Router', 'Axios', 'Pinia / Vuex', 'persistedstate', 'QRCode', 'Less', 'SCSS'],
     category: '企业服务平台',
-    period: '2025.12 - 2026.02',
+    period: '2025.12 - 2026.01',
     role: '主导前端架构选型并负责 H5 客户端与 PC 管理端的核心模块开发，完成动态权限体系、工单流程、支付流程与公共组件体系建设。',
     highlights: ['H5 客户端 + PC 管理端双端协同', 'RBAC 动态权限与动态路由注册', '工单状态机与支付倒计时流程'],
     features: [
@@ -78,7 +78,7 @@ const projects: ProjectCard[] = [
     cover: '',
     techStacks: ['Uniapp', 'Vue 3', '微信小程序', 'Composition API', 'Vite', 'SCSS'],
     category: '微信小程序',
-    period: '2026.01 - 2026.02',
+    period: '2026.03 - 2026.04',
     role: '独立负责项目架构设计、核心业务开发、微信生态能力接入与通用组件封装。',
     highlights: ['6 种服务类型的差异化下单流程', '订单全生命周期管理', '微信登录、导航与支付能力接入'],
     features: [
@@ -136,56 +136,40 @@ const openDetail = (projectId: string) => {
 <template>
   <section class="px-4 pb-12 sm:px-6 sm:pb-16">
     <div class="mx-auto max-w-7xl">
-      <SectionTitle
-        eyebrow="项目展示"
-        title="持续打磨中的产品与交互实践"
-        description="这里收录了近阶段完成的项目，重点关注内容组织、页面交互、业务流程与工程实现之间的平衡。"
-      />
+      <SectionTitle eyebrow="项目展示" title="持续打磨中的产品与交互实践" description="这里收录了近阶段完成的项目，重点关注内容组织、页面交互、业务流程与工程实现之间的平衡。" />
 
-      <div class="app-card mt-8 grid gap-4 rounded-[1.75rem] p-4 sm:mt-10 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div
+        class="app-card mt-8 grid gap-4 rounded-[1.75rem] p-4 sm:mt-10 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-center">
         <label class="block">
           <span class="sr-only">搜索项目</span>
           <div class="app-public-input flex items-center gap-3 rounded-2xl px-4 py-3">
-            <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8">
+            <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor"
+              stroke-width="1.8">
               <circle cx="11" cy="11" r="6.5" />
               <path d="m16 16 4.5 4.5" />
             </svg>
-            <input
-              v-model="keyword"
-              type="text"
+            <input v-model="keyword" type="text"
               class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              placeholder="搜索项目名称、技术栈或亮点"
-            />
-            <button
-              v-if="keyword"
-              type="button"
-              class="text-xs font-medium text-slate-400 transition hover:text-slate-700"
-              @click="keyword = ''"
-            >
+              placeholder="搜索项目名称、技术栈或亮点" />
+            <button v-if="keyword" type="button"
+              class="text-xs font-medium text-slate-400 transition hover:text-slate-700" @click="keyword = ''">
               清空
             </button>
           </div>
         </label>
 
         <div class="flex gap-3 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
-          <button
-            v-for="item in categories"
-            :key="item"
+          <button v-for="item in categories" :key="item"
             class="app-filter-button shrink-0 whitespace-nowrap px-5 py-2 text-sm font-medium"
-            :class="{ 'is-active': category === item }"
-            @click="category = item"
-          >
+            :class="{ 'is-active': category === item }" @click="category = item">
             {{ item }}
           </button>
         </div>
       </div>
 
       <div class="mt-8 grid gap-5 sm:mt-10 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <article
-          v-for="project in filteredProjects"
-          :key="project.id"
-          class="app-card interactive-card group rounded-[1.75rem] p-5 sm:p-6"
-        >
+        <article v-for="project in filteredProjects" :key="project.id"
+          class="app-card interactive-card group rounded-[1.75rem] p-5 sm:p-6">
           <div>
             <div class="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
               <div>
@@ -198,11 +182,7 @@ const openDetail = (projectId: string) => {
           </div>
 
           <div class="mt-5 flex flex-wrap gap-2">
-            <span
-              v-for="stack in project.techStacks"
-              :key="stack"
-              class="app-tag-pill px-3 py-1 text-xs"
-            >
+            <span v-for="stack in project.techStacks" :key="stack" class="app-tag-pill px-3 py-1 text-xs">
               {{ stack }}
             </span>
           </div>
@@ -219,12 +199,8 @@ const openDetail = (projectId: string) => {
         </article>
       </div>
 
-      <AppEmptyState
-        v-if="!filteredProjects.length"
-        class="mt-10"
-        title="没有找到匹配项目"
-        description="可以换个关键词，或者从不同项目类型继续筛选。"
-      />
+      <AppEmptyState v-if="!filteredProjects.length" class="mt-10" title="没有找到匹配项目"
+        description="可以换个关键词，或者从不同项目类型继续筛选。" />
     </div>
 
     <AppDrawer v-model="detailVisible" :title="activeProject?.title ?? '项目详情'">
@@ -233,11 +209,7 @@ const openDetail = (projectId: string) => {
           <p class="app-caption text-sm">{{ activeProject.category }} / {{ activeProject.period }}</p>
           <p class="app-copy mt-3 text-base leading-7">{{ activeProject.summary }}</p>
           <div class="mt-4 flex flex-wrap gap-2">
-            <span
-              v-for="stack in activeProject.techStacks"
-              :key="stack"
-              class="app-tag-pill px-3 py-1 text-xs"
-            >
+            <span v-for="stack in activeProject.techStacks" :key="stack" class="app-tag-pill px-3 py-1 text-xs">
               {{ stack }}
             </span>
           </div>
