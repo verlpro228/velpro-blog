@@ -32,8 +32,8 @@ const profile = {
 }
 
 const contacts: ContactItem[] = [
-  { label: '手机号', value: '17651707339' },
-  { label: '邮箱', value: 'k2280406@163.com' },
+  { label: '手机号', value: '135xxxxxxxx' },
+  { label: '邮箱', value: 'xxxxxxx@163.com' },
   { label: 'GitHub', value: 'https://github.com/verlpro228/velpro-blog' },
   { label: '博客', value: '站内知识库', href: '/knowledge' },
 ]
@@ -94,7 +94,7 @@ const projectExperiences: ResumeProject[] = [
 
 const educationList: EducationItem[] = [
   {
-    school: '河南大学',
+    school: 'xx大学',
     major: '本科 - 数据科学与大数据技术',
     period: '2023 - 2027',
   },
