@@ -63,7 +63,7 @@ const handleSubmit = async () => {
           这里是博客系统的核心管理后台。登录后可进行文档发布、内容维护与系统配置等操作，帮助你更高效地管理整个站点内容。
         </p>
 
-        <div class="mt-10 grid gap-4 md:grid-cols-3">
+        <div class="mt-10 grid gap-4 md:grid-cols-2">
           <div class="app-card-strong rounded-2xl p-4">
             <p class="app-caption text-sm">访问方式</p>
             <p class="app-heading mt-2 text-lg font-semibold">登录验证</p>
@@ -72,10 +72,6 @@ const handleSubmit = async () => {
             <p class="app-caption text-sm">权限范围</p>
             <p class="app-heading mt-2 text-lg font-semibold">内容管理</p>
           </div>
-          <div class="app-card-strong rounded-2xl p-4">
-            <p class="app-caption text-sm">直达工作台</p>
-            <p class="app-heading mt-2 text-sm font-semibold">/admin/editor</p>
-          </div>
         </div>
       </div>
 
@@ -83,7 +79,7 @@ const handleSubmit = async () => {
         <div class="mb-8">
           <p class="app-overline text-xs uppercase tracking-[0.32em]">欢迎回来</p>
           <h2 class="app-heading mt-3 text-2xl font-semibold sm:text-3xl">登录系统</h2>
-          <p class="app-caption mt-2 text-sm">登录后将跳转至：{{ redirectTarget }}</p>
+          <p class="app-caption mt-2 text-sm">登录后将跳转到后台工作台</p>
         </div>
 
         <el-form

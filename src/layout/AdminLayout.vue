@@ -83,9 +83,6 @@ const syncLabel = computed(() => {
               <h1 class="app-heading text-xl font-semibold sm:text-2xl">{{ currentTitle }}</h1>
               <p class="app-caption mt-2 text-sm">{{ syncLabel }}</p>
             </div>
-            <div class="app-route-pill max-w-full break-all rounded-full px-4 py-2 text-sm">
-              {{ route.fullPath }}
-            </div>
           </div>
         </header>
 

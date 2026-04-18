@@ -247,6 +247,10 @@ button {
   box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12);
 }
 
+:root.theme-dark .projects-page .project-search-input {
+  color: #ffffff !important;
+}
+
 .app-filter-button {
   border: 1px solid transparent;
   border-radius: 999px;
@@ -730,6 +734,18 @@ button {
   background: var(--color-chip-bg) !important;
   border-color: var(--color-border) !important;
   color: var(--color-text-muted) !important;
+}
+
+:root.theme-light .editor-shell .el-table .el-tag {
+  background: #0c88a7 !important;
+  border-color: #0c88a7 !important;
+  color: #ecfeff !important;
+}
+
+:root.theme-dark .editor-shell .el-table .el-tag {
+  background: #22d3ee !important;
+  border-color: #22d3ee !important;
+  color: #083344 !important;
 }
 
 .el-radio-button__inner {
