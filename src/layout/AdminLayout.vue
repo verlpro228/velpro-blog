@@ -64,11 +64,6 @@ const syncLabel = computed(() => {
         </nav>
 
         <div class="mt-6 flex flex-col gap-3 sm:mt-8">
-          <el-button circle :aria-label="themeActionLabel" :title="themeActionLabel" @click="toggleTheme">
-            <el-icon :size="18">
-              <component :is="themeIcon" />
-            </el-icon>
-          </el-button>
           <el-button plain @click="router.push('/')">返回站点</el-button>
           <el-button @click="logout">退出登录</el-button>
         </div>
@@ -82,6 +77,12 @@ const syncLabel = computed(() => {
               <h1 class="app-heading text-xl font-semibold sm:text-2xl">{{ currentTitle }}</h1>
               <p class="app-caption mt-2 text-sm">{{ syncLabel }}</p>
             </div>
+
+            <el-button circle :aria-label="themeActionLabel" :title="themeActionLabel" @click="toggleTheme">
+              <el-icon :size="18">
+                <component :is="themeIcon" />
+              </el-icon>
+            </el-button>
           </div>
         </header>
 
