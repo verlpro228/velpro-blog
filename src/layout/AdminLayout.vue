@@ -64,11 +64,10 @@ const syncLabel = computed(() => {
         </nav>
 
         <div class="mt-6 flex flex-col gap-3 sm:mt-8">
-          <el-button :aria-label="themeActionLabel" :title="themeActionLabel" @click="toggleTheme">
+          <el-button circle :aria-label="themeActionLabel" :title="themeActionLabel" @click="toggleTheme">
             <el-icon :size="18">
               <component :is="themeIcon" />
             </el-icon>
-            <span>{{ isDark ? '浅色模式' : '深色模式' }}</span>
           </el-button>
           <el-button plain @click="router.push('/')">返回站点</el-button>
           <el-button @click="logout">退出登录</el-button>
