@@ -21,17 +21,32 @@ const capabilityTags = ['Vue 3', 'TypeScript', 'GSAP', 'Markdown', 'Element Plus
 const vantaContainerRef = ref<HTMLElement | null>(null)
 const preferredReducedMotion = usePreferredReducedMotion()
 let vantaEffect: VantaEffect | null = null
-let idleHandle: number | null = null
-let timeoutHandle: ReturnType<typeof globalThis.setTimeout> | null = null
 let vantaFactoryPromise: Promise<(options: Record<string, unknown>) => VantaEffect> | null = null
 let isInitializing = false
 
-const VANTA_MIN_WIDTH = 768
+const VANTA_MIN_WIDTH = 640
 
 const canEnableVanta = () =>
   typeof window !== 'undefined' &&
-  preferredReducedMotion.value !== 'reduce' &&
   window.innerWidth >= VANTA_MIN_WIDTH
+
+const getVantaOptions = () => {
+  const reducedMotion = preferredReducedMotion.value === 'reduce'
+
+  return {
+    mouseControls: true,
+    touchControls: true,
+    gyroControls: true,
+    minHeight: 100,
+    minWidth: 100,
+    baseColor: 0x163654,
+    backgroundColor: 0x272756,
+    speed: reducedMotion ? 0.3 : 1,
+    amplitudeFactor: reducedMotion ? 0.45 : 1,
+    rotationFactor: reducedMotion ? 0.5 : 1,
+    ringFactor: reducedMotion ? 0.75 : 1,
+  }
+}
 
 const loadVantaFactory = async () => {
   if (!vantaFactoryPromise) {
@@ -84,13 +99,7 @@ const initVanta = async () => {
 
     vantaEffect = createHalo({
       el: vantaContainerRef.value,
-      mouseControls: true,
-      touchControls: true,
-      gyroControls: true,
-      minHeight: 100,
-      minWidth: 100,
-      baseColor: 0x163654,
-      backgroundColor: 0x272756,
+      ...getVantaOptions(),
     })
 
     vantaEffect.resize?.()
@@ -102,16 +111,9 @@ const initVanta = async () => {
 }
 
 const scheduleVanta = () => {
-  const activate = () => {
+  window.requestAnimationFrame(() => {
     void initVanta()
-  }
-
-  if (window.requestIdleCallback) {
-    idleHandle = window.requestIdleCallback(activate, { timeout: 1200 })
-    return
-  }
-
-  timeoutHandle = globalThis.setTimeout(activate, 420)
+  })
 }
 
 const handleViewportChange = () => {
@@ -136,14 +138,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleViewportChange)
-
-  if (idleHandle !== null && window.cancelIdleCallback) {
-    window.cancelIdleCallback(idleHandle)
-  }
-
-  if (timeoutHandle !== null) {
-    globalThis.clearTimeout(timeoutHandle)
-  }
 
   destroyVanta()
 })

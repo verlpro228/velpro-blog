@@ -26,7 +26,7 @@ interface EducationItem {
 }
 
 const profile = {
-  name: 'Velpro',
+  name: '李登凯',
   target: '前端开发工程师',
   summary: '专注 Vue 3、企业后台与内容平台建设，关注工程化质量、业务闭环与用户体验。',
 }
@@ -94,7 +94,7 @@ const projectExperiences: ResumeProject[] = [
 
 const educationList: EducationItem[] = [
   {
-    school: '河南大学',
+    school: '河南大学民生学院',
     major: '本科 - 数据科学与大数据技术',
     period: '2023 - 2027',
   },
