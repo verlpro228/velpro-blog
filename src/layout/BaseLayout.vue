@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppAiAssistant from '@/components/common/AppAiAssistant.vue'
 import AppFooter from '@/components/common/AppFooter.vue'
 import AppNavbar from '@/components/common/AppNavbar.vue'
 </script>
@@ -14,5 +15,6 @@ import AppNavbar from '@/components/common/AppNavbar.vue'
       </RouterView>
     </main>
     <AppFooter />
+    <AppAiAssistant />
   </div>
 </template>
