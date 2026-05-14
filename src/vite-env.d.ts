@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_ENABLE_AI_ASSISTANT?: string
+  readonly VITE_AI_PROXY_ENDPOINT?: string
 }
 
 interface ImportMeta {

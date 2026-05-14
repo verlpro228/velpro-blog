@@ -1,6 +1,6 @@
 import type { LongcatStreamChunk, StreamLongcatChatOptions } from '@/types/ai'
 
-const AI_PROXY_ENDPOINT = '/api/ai/chat'
+const AI_PROXY_ENDPOINT = import.meta.env.VITE_AI_PROXY_ENDPOINT?.trim() || '/api/ai/chat'
 
 function resolveDeltaContent(chunk: LongcatStreamChunk) {
   const content = chunk.choices?.[0]?.delta?.content ?? chunk.choices?.[0]?.message?.content

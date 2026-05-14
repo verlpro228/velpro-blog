@@ -1,6 +1,12 @@
 import { Readable } from 'node:stream'
 import { readLongcatErrorMessage, requestLongcatChat } from '../../server/longcat-proxy.js'
 
+function setCorsHeaders(response) {
+  response.setHeader('Access-Control-Allow-Origin', '*')
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+}
+
 function parseRequestBody(body) {
   if (!body) {
     return {}
@@ -18,12 +24,20 @@ function parseRequestBody(body) {
 }
 
 function setProxyHeaders(response, contentType) {
+  setCorsHeaders(response)
   response.setHeader('Content-Type', contentType || 'text/event-stream; charset=utf-8')
   response.setHeader('Cache-Control', 'no-cache, no-transform')
   response.setHeader('X-Accel-Buffering', 'no')
 }
 
 export default async function handler(request, response) {
+  setCorsHeaders(response)
+
+  if (request.method === 'OPTIONS') {
+    response.status(204).end()
+    return
+  }
+
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST')
     response.status(405).json({ error: { message: 'Method not allowed.' } })
