@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@11.0.9",
   "engines": {
-    "node": "22.x"
+    "node": ">=19 <25"
   },
   "scripts": {
     "dev": "vite --configLoader native",
