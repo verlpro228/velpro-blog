@@ -67,15 +67,15 @@ const projectExperiences: ResumeProject[] = [
     ],
   },
   {
-    name: 'Vue3 企业级智能工单与服务预约管理平台',
-    techStacks: ['Vue 3', 'Vite', 'Vant 4', 'Element Plus', 'Axios', 'Pinia / Vuex', 'QRCode'],
+    name: 'CVita 在线简历生成平台',
+    techStacks: ['Vue 3', 'Vite 8', 'Vue Router 4', 'Element Plus', 'Tailwind CSS', 'GSAP 3', 'html2canvas', 'jsPDF'],
     summary:
-      '面向企业客户和内部运营的双端服务调度平台，覆盖服务预约、工单派发、人员管理、权限控制与数据监控等完整流程。',
+      '独立开发的纯前端在线简历生成平台，支持实时预览、模板切换、PDF 导出、JSON 备份与本地持久化存储，兼顾可用性、隐私性与部署成本。',
     responsibilities: [
-      '主导 H5 客户端与 PC 管理端基础工程搭建，统一前端技术栈与目录规范',
-      '实现 RBAC 动态权限体系、动态路由注册与按钮级权限控制',
-      '完成工单状态流转、支付倒计时、服务进度追踪等关键业务逻辑开发',
-      '提取 SearchForm、DataTable、UploadImage 等复用组件，提升开发效率',
+      '独立完成产品架构设计与前端工程搭建，覆盖首页、模板中心、编辑器与预览页四大核心模块',
+      '设计统一数据 Schema，支持 9 类简历模块配置，并通过 LocalStorage 实现本地持久化存储',
+      '开发所见即所得的双栏编辑器与 6 套模板切换能力，保证数据无损迁移与跨模板复用',
+      '基于 html2canvas + jsPDF 实现高精度 PDF 导出，并补齐 JSON 导入导出、模块拖拽、深色模式等体验能力',
     ],
   },
   {

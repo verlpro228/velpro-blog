@@ -11,7 +11,7 @@ const keyword = ref('')
 const detailVisible = ref(false)
 const activeProjectId = ref('')
 
-const categories = ['全部', 'AI 服务平台', '企业服务平台', '微信小程序']
+const categories = ['全部', 'AI 服务平台', '前端工具 SaaS', '微信小程序']
 
 const projects: ProjectCard[] = [
   {
@@ -43,31 +43,31 @@ const projects: ProjectCard[] = [
     ],
   },
   {
-    id: 'smart-service-platform',
-    title: '企业级工单与预约服务平台',
+    id: 'cvita-resume-platform',
+    title: 'CVita 在线简历生成平台',
     summary:
-      '面向企业场景的服务调度系统，覆盖 H5 客户端与 PC 管理端，支持预约、工单流转与权限体系。',
+      '一款纯前端、零后端依赖的在线简历生成工具，支持简历编辑、实时预览、模板切换、PDF 导出与 JSON 备份，强调低门槛、隐私安全与跨设备使用体验。',
     cover: '',
-    techStacks: ['Vue 3', 'Vite', 'Vant 4', 'Element Plus', 'Vue Router', 'Axios', 'Pinia', 'Less', 'SCSS'],
-    category: '企业服务平台',
-    period: '2025.12 - 2026.01',
-    role: '主导双端前端实现，完成动态路由、权限控制、工单状态机与支付流程接入。',
-    highlights: ['H5 + PC 双端协同', 'RBAC 权限模型', '工单状态机与倒计时流程'],
+    techStacks: ['Vue 3', 'Vite 8', 'Vue Router 4', 'Element Plus', 'Tailwind CSS', 'GSAP 3', 'html2canvas', 'jsPDF'],
+    category: '前端工具 SaaS',
+    period: '2025',
+    role: '独立负责产品设计、前端架构与核心功能开发，完成首页、模板中心、编辑器、预览页与部署上线全流程。',
+    highlights: ['纯前端零后端依赖', '6 套模板一键切换', 'PDF 导出 + JSON 导入导出'],
     features: [
-      'H5 端支持预约下单、进度追踪、支付与个人中心',
-      'PC 端支持看板、权限配置、调度管理与异常工单处理',
-      '基于菜单树动态注册路由并实现按钮级权限控制',
-      '抽象 SearchForm、DataTable、UploadImage 等复用组件',
+      '设计统一数据 Schema，支持教育背景、项目经历、技能特长等 9 类简历模块灵活配置',
+      '实现左右分栏实时预览编辑器，左侧表单编辑与右侧 A4 简历预览同步更新',
+      '基于 html2canvas + jsPDF 实现高精度 PDF 导出，并处理字体加载、分页切割与图片兼容问题',
+      '支持 LocalStorage 本地持久化、JSON 导入导出、模块拖拽排序、深色模式与响应式布局',
     ],
     outcomes: [
-      '交付稳定运行的预约与工单闭环系统',
-      '支持多角色、多部门协同的权限管理',
-      '通过资源优化有效提升首屏加载速度',
+      '形成从首页引导、模板选择、内容编辑到导出交付的完整产品闭环',
+      '在纯前端架构下兼顾了隐私安全、部署成本与可扩展性',
+      '适合作为前端工程化、交互设计与工具型 SaaS 产品能力的综合展示案例',
     ],
     metrics: [
-      { label: '系统端数', value: '2 端' },
-      { label: '角色类型', value: '4 类' },
-      { label: '工单状态', value: '5 种' },
+      { label: '模板数量', value: '6 套' },
+      { label: '简历模块', value: '9 类' },
+      { label: '导出能力', value: 'PDF / JSON' },
     ],
   },
   {
@@ -187,12 +187,9 @@ const openDetail = (projectId: string) => {
           class="app-card interactive-card group rounded-[1.75rem] p-5 sm:p-6"
         >
           <div>
-            <div class="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
-              <div>
-                <p class="app-overline text-sm">{{ project.category }}</p>
-                <h3 class="app-heading mt-3 text-xl font-semibold sm:text-2xl">{{ project.title }}</h3>
-              </div>
-              <span class="app-chip px-3 py-1 text-xs">{{ project.period }}</span>
+            <div>
+              <p class="app-overline text-sm">{{ project.category }}</p>
+              <h3 class="app-heading mt-3 text-xl font-semibold sm:text-2xl">{{ project.title }}</h3>
             </div>
             <p class="app-copy mt-4 text-sm leading-7">{{ project.summary }}</p>
           </div>
