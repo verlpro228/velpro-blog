@@ -4,7 +4,7 @@
 
 ## 在线演示
 
-- **博客地址**: https://velpro-blog.vercel.app/
+- **博客地址**: https://www.velpro.xyz
 
 ## 功能特点
 
