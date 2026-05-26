@@ -1,34 +1,34 @@
-const DEFAULT_LONGCAT_BASE_URL = 'https://api.longcat.chat/openai'
-const DEFAULT_LONGCAT_MODEL = 'LongCat-Flash-Lite'
+const DEFAULT_LONGCAT_BASE_URL = 'https://open.bigmodel.cn/api/paas/v4'
+const DEFAULT_LONGCAT_MODEL = 'glm-4-flash-250414'
 
 function trimTrailingSlash(value) {
   return value.replace(/\/+$/, '')
 }
 
-function resolveEnvValue(env, primaryKey, fallbackKey) {
-  const primaryValue = env?.[primaryKey]
+function resolveEnvValue(env, ...keys) {
+  for (const key of keys) {
+    const value = env?.[key]
 
-  if (typeof primaryValue === 'string' && primaryValue.trim()) {
-    return primaryValue.trim()
-  }
-
-  const fallbackValue = env?.[fallbackKey]
-
-  if (typeof fallbackValue === 'string' && fallbackValue.trim()) {
-    return fallbackValue.trim()
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim()
+    }
   }
 
   return ''
 }
 
 export function resolveLongcatServerConfig(env = process.env) {
-  const apiKey = resolveEnvValue(env, 'LONGCAT_API_KEY', 'VITE_LONGCAT_API_KEY')
-  const baseUrl = resolveEnvValue(env, 'LONGCAT_BASE_URL', 'VITE_LONGCAT_BASE_URL') || DEFAULT_LONGCAT_BASE_URL
-  const model = resolveEnvValue(env, 'LONGCAT_MODEL', 'VITE_LONGCAT_MODEL') || DEFAULT_LONGCAT_MODEL
+  const apiKey = resolveEnvValue(env, 'LONGCAT_API_KEY', 'ZHIPU_API_KEY', 'VITE_LONGCAT_API_KEY', 'VITE_ZHIPU_API_KEY')
+  const baseUrl =
+    resolveEnvValue(env, 'LONGCAT_BASE_URL', 'ZHIPU_BASE_URL', 'VITE_LONGCAT_BASE_URL', 'VITE_ZHIPU_BASE_URL') ||
+    DEFAULT_LONGCAT_BASE_URL
+  const model =
+    resolveEnvValue(env, 'LONGCAT_MODEL', 'ZHIPU_MODEL', 'VITE_LONGCAT_MODEL', 'VITE_ZHIPU_MODEL') ||
+    DEFAULT_LONGCAT_MODEL
 
   return {
     apiKey,
-    apiUrl: `${trimTrailingSlash(baseUrl)}/v1/chat/completions`,
+    apiUrl: `${trimTrailingSlash(baseUrl)}/chat/completions`,
     model,
   }
 }
@@ -60,7 +60,7 @@ export async function requestLongcatChat(messages, env = process.env, signal) {
   const config = resolveLongcatServerConfig(env)
 
   if (!config.apiKey) {
-    throw new Error('Missing LONGCAT_API_KEY on the server.')
+    throw new Error('Missing LONGCAT_API_KEY or ZHIPU_API_KEY on the server.')
   }
 
   const response = await fetch(config.apiUrl, {
