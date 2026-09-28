@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
+import { createDocApi, deleteDocApi, getDocApi, getDocsApi, updateDocApi } from '@/api/modules/docs'
 import { STORAGE_KEYS } from '@/constants/app'
-import { cloneDocsSeed } from '@/data/docs'
 import type { DocMutationPayload, KnowledgeDoc } from '@/types/content'
 
 interface DocsState {
   docs: KnowledgeDoc[]
+  // docId -> 全文，按需从单篇接口加载；列表接口不含 content，避免每次拉取 70KB+ 数据
+  contentCache: Record<string, string>
   activeDocId: string
   keyword: string
   initialized: boolean
@@ -16,15 +18,13 @@ interface DocsState {
 const sortDocs = (docs: KnowledgeDoc[]) =>
   [...docs].sort((left, right) => right.createTime.localeCompare(left.createTime))
 
-const createDocId = () => `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-const createDate = () => new Date().toISOString().slice(0, 10)
-
 export const useDocsStore = defineStore('docs', {
   state: (): DocsState => ({
-    docs: sortDocs(cloneDocsSeed()),
+    docs: [],
+    contentCache: {},
     activeDocId: '',
     keyword: '',
-    initialized: true,
+    initialized: false,
     loading: false,
     saving: false,
     lastFetchedAt: '',
@@ -43,6 +43,10 @@ export const useDocsStore = defineStore('docs', {
     },
     setActiveDoc(docId: string) {
       this.activeDocId = docId
+
+      if (docId) {
+        void this.loadDocContent(docId)
+      }
     },
     ensureActiveDoc() {
       if (!this.docs.length) {
@@ -52,6 +56,10 @@ export const useDocsStore = defineStore('docs', {
 
       if (!this.docs.some((doc) => doc.id === this.activeDocId)) {
         this.activeDocId = this.docs[0].id
+      }
+
+      if (this.activeDocId) {
+        void this.loadDocContent(this.activeDocId)
       }
     },
     upsertDoc(doc: KnowledgeDoc) {
@@ -65,63 +73,65 @@ export const useDocsStore = defineStore('docs', {
         this.docs = sortDocs(nextDocs)
       }
 
+      this.contentCache[doc.id] = doc.content
       this.activeDocId = doc.id
     },
     async fetchDocs() {
       this.loading = true
 
       try {
-        if (!this.docs.length && !this.initialized) {
-          this.docs = sortDocs(cloneDocsSeed())
-          this.initialized = true
-        }
-
-        this.ensureActiveDoc()
-
-        if (!this.lastFetchedAt) {
-          this.recordSyncTime()
-        }
+        const docs = await getDocsApi()
+        // 已加载过的全文写回列表，切换页面不重复请求
+        this.docs = sortDocs(
+          docs.map((doc) => ({
+            ...doc,
+            content: this.contentCache[doc.id] ?? doc.content,
+          })),
+        )
+        this.initialized = true
+        this.recordSyncTime()
+      } catch {
+        // http 拦截器已提示错误，保留本地缓存数据
       } finally {
+        this.ensureActiveDoc()
         this.loading = false
+      }
+    },
+    async loadDocContent(docId: string) {
+      if (docId in this.contentCache) {
+        return this.contentCache[docId]
+      }
+
+      try {
+        const doc = await getDocApi(docId)
+        this.contentCache[docId] = doc.content
+
+        // 直接写回列表项（保持对象引用），依赖 currentDoc.content 的页面自动更新
+        const item = this.docs.find((entry) => entry.id === docId)
+        if (item) {
+          item.content = doc.content
+        }
+
+        return doc.content
+      } catch {
+        // http 拦截器已提示错误
+        return ''
       }
     },
     async refreshDocs() {
-      this.loading = true
-
-      try {
-        this.docs = sortDocs([...this.docs])
-        this.ensureActiveDoc()
-        this.recordSyncTime()
-      } finally {
-        this.loading = false
-      }
+      await this.fetchDocs()
     },
     async resetDocs() {
-      this.loading = true
-
-      try {
-        this.docs = sortDocs(cloneDocsSeed())
-        this.keyword = ''
-        this.initialized = true
-        this.ensureActiveDoc()
-        this.recordSyncTime()
-      } finally {
-        this.loading = false
-      }
+      this.keyword = ''
+      await this.fetchDocs()
     },
     async saveDoc(payload: DocMutationPayload & { id?: string }) {
       this.saving = true
 
       try {
-        const current = payload.id ? this.docs.find((item) => item.id === payload.id) : null
-        const doc: KnowledgeDoc = {
-          id: payload.id ?? createDocId(),
-          title: payload.title,
-          summary: payload.summary,
-          content: payload.content,
-          tags: [...payload.tags],
-          createTime: current?.createTime ?? createDate(),
-        }
+        const doc = payload.id
+          ? await updateDocApi(payload.id, payload)
+          : await createDocApi(payload)
 
         this.upsertDoc(doc)
         this.recordSyncTime()
@@ -134,7 +144,9 @@ export const useDocsStore = defineStore('docs', {
       this.saving = true
 
       try {
+        await deleteDocApi(docId)
         this.docs = this.docs.filter((doc) => doc.id !== docId)
+        delete this.contentCache[docId]
 
         if (this.activeDocId === docId) {
           this.ensureActiveDoc()

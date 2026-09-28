@@ -1,10 +1,8 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { STATIC_ADMIN_PROFILE, STATIC_LOGIN_CREDENTIALS } from '@/data/auth'
+import { loginApi } from '@/api/modules/auth'
 import type { LoginPayload } from '@/types/user'
 import { useUserStore } from '@/store/modules/user'
-
-const wait = (duration = 260) => new Promise((resolve) => window.setTimeout(resolve, duration))
 
 export function useAuth() {
   const userStore = useUserStore()
@@ -15,24 +13,10 @@ export function useAuth() {
     loading.value = true
 
     try {
-      await wait()
-
-      const username = payload.username.trim()
-      const password = payload.password
-
-      if (
-        username !== STATIC_LOGIN_CREDENTIALS.username ||
-        password !== STATIC_LOGIN_CREDENTIALS.password
-      ) {
-        throw new Error('INVALID_CREDENTIALS')
-      }
-
-      const response = {
-        ...STATIC_ADMIN_PROFILE,
-        userInfo: {
-          ...STATIC_ADMIN_PROFILE.userInfo,
-        },
-      }
+      const response = await loginApi({
+        username: payload.username.trim(),
+        password: payload.password,
+      })
 
       userStore.setUserSession(response)
       return response

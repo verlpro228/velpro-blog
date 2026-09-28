@@ -20,6 +20,11 @@ export interface TocItem {
   text: string
 }
 
+export interface ProjectMetric {
+  label: string
+  value: string
+}
+
 export interface ProjectCard {
   id: string
   title: string
@@ -32,10 +37,38 @@ export interface ProjectCard {
   highlights: string[]
   features: string[]
   outcomes: string[]
-  metrics: Array<{
-    label: string
-    value: string
-  }>
+  responsibilities: string[]
+  metrics: ProjectMetric[]
+  sortOrder: number
+}
+
+export type ProjectMutationPayload = Omit<ProjectCard, 'id'>
+
+export interface ContactItem {
+  label: string
+  value: string
+  href: string
+}
+
+export interface SkillGroup {
+  title: string
+  items: string[]
+}
+
+export interface EducationItem {
+  school: string
+  major: string
+  period: string
+}
+
+export interface SiteProfile {
+  name: string
+  target: string
+  summary: string
+  contacts: ContactItem[]
+  skillGroups: SkillGroup[]
+  education: EducationItem[]
+  timeline: TimelineItem[]
 }
 
 export interface TimelineItem {

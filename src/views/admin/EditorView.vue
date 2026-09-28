@@ -198,12 +198,15 @@ const openCreateDialog = () => {
   void renderPreview(formState.content)
 }
 
-const openEditDialog = (docId: string) => {
+const openEditDialog = async (docId: string) => {
   const target = docsStore.docs.find((item) => item.id === docId)
 
   if (!target) {
     return
   }
+
+  // 列表接口不含全文，打开编辑前按需加载（已加载过则命中缓存）
+  await docsStore.loadDocContent(docId)
 
   const restored = restoreDraft(`${STORAGE_KEYS.editorDraft}:${docId}`)
 
@@ -409,10 +412,6 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div class="mb-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-7 text-amber-800">
-      当前为静态演示模式：文档新增、编辑、删除仅保存在当前浏览器，本机刷新后仍会保留，但不会同步到其他设备。
-    </div>
-
     <div class="mb-6 grid gap-4 md:grid-cols-3">
       <div class="app-card rounded-[1.5rem] px-5 py-4">
         <p class="app-caption text-sm">文档数量</p>
@@ -540,27 +539,26 @@ onBeforeUnmount(() => {
         <el-button type="primary" :loading="docsStore.saving" @click="handleSave">保存文档</el-button>
       </template>
     </el-dialog>
-  </section>
-
-  <Teleport to="body">
-    <div v-if="confirmDialog.visible" class="editor-confirm-overlay" aria-hidden="false">
-      <div class="editor-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="editor-confirm-title"
-        aria-describedby="editor-confirm-message">
-        <div class="editor-confirm-header">
-          <h3 id="editor-confirm-title" class="editor-confirm-title">{{ confirmDialog.title }}</h3>
-        </div>
-        <div class="editor-confirm-content">
-          <p id="editor-confirm-message" class="editor-confirm-message">{{ confirmDialog.message }}</p>
-        </div>
-        <div class="editor-confirm-actions">
-          <el-button @click="closeConfirmDialog(false)">{{ confirmDialog.cancelButtonText }}</el-button>
-          <el-button :type="confirmDialog.confirmButtonType" @click="closeConfirmDialog(true)">
-            {{ confirmDialog.confirmButtonText }}
-          </el-button>
+    <Teleport to="body">
+      <div v-if="confirmDialog.visible" class="editor-confirm-overlay" aria-hidden="false">
+        <div class="editor-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="editor-confirm-title"
+          aria-describedby="editor-confirm-message">
+          <div class="editor-confirm-header">
+            <h3 id="editor-confirm-title" class="editor-confirm-title">{{ confirmDialog.title }}</h3>
+          </div>
+          <div class="editor-confirm-content">
+            <p id="editor-confirm-message" class="editor-confirm-message">{{ confirmDialog.message }}</p>
+          </div>
+          <div class="editor-confirm-actions">
+            <el-button @click="closeConfirmDialog(false)">{{ confirmDialog.cancelButtonText }}</el-button>
+            <el-button :type="confirmDialog.confirmButtonType" @click="closeConfirmDialog(true)">
+              {{ confirmDialog.confirmButtonText }}
+            </el-button>
+          </div>
         </div>
       </div>
-    </div>
-  </Teleport>
+    </Teleport>
+  </section>
 </template>
 
 <style scoped>

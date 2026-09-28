@@ -15,3 +15,13 @@ export interface LoginResponse {
   token: string
   userInfo: UserProfile
 }
+
+export interface ProfileUpdatePayload {
+  name: string
+  tagline: string
+}
+
+export interface PasswordUpdatePayload {
+  oldPassword: string
+  newPassword: string
+}

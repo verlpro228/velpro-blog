@@ -70,6 +70,33 @@ export const routes: RouteRecordRaw[] = [
           requiresAuth: true,
         },
       },
+      {
+        path: 'projects',
+        name: 'projects-admin',
+        component: () => import('@/views/admin/ProjectsAdminView.vue'),
+        meta: {
+          title: '项目管理',
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'profile',
+        name: 'profile-admin',
+        component: () => import('@/views/admin/ProfileAdminView.vue'),
+        meta: {
+          title: '介绍管理',
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'settings',
+        name: 'settings',
+        component: () => import('@/views/admin/SettingsView.vue'),
+        meta: {
+          title: '账号设置',
+          requiresAuth: true,
+        },
+      },
     ],
   },
   {

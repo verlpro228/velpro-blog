@@ -7,6 +7,11 @@ export async function getDocsApi() {
   return response.data.data
 }
 
+export async function getDocApi(id: string) {
+  const response = await http.get<ApiResponse<KnowledgeDoc>>(`/docs/${id}`)
+  return response.data.data
+}
+
 export async function createDocApi(payload: DocMutationPayload) {
   const response = await http.post<ApiResponse<KnowledgeDoc>>('/docs', payload)
   return response.data.data

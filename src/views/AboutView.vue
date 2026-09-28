@@ -1,135 +1,37 @@
 <script setup lang="ts">
-import type { TimelineItem } from '@/types/content'
+import { computed, onMounted } from 'vue'
+import { useProjectsStore } from '@/store/modules/projects'
+import { useSiteProfileStore } from '@/store/modules/profile'
 
-interface ContactItem {
-  label: string
-  value: string
-  href?: string
-}
+const projectsStore = useProjectsStore()
+const profileStore = useSiteProfileStore()
+const profileData = computed(() => profileStore.profile)
 
-interface SkillGroup {
-  title: string
-  items: string[]
-}
+const profile = computed(() => ({
+  name: profileData.value?.name ?? '',
+  target: profileData.value?.target ?? '',
+  summary: profileData.value?.summary ?? '',
+}))
 
-interface ResumeProject {
-  name: string
-  techStacks: string[]
-  summary: string
-  responsibilities: string[]
-}
+const contacts = computed(() => profileData.value?.contacts ?? [])
+const skillGroups = computed(() => profileData.value?.skillGroups ?? [])
+const educationList = computed(() => profileData.value?.education ?? [])
+const timeline = computed(() => profileData.value?.timeline ?? [])
 
-interface EducationItem {
-  school: string
-  major: string
-  period: string
-}
+// 项目经验区块直接复用"项目展示"的项目数据回显
+const projectExperiences = computed(() =>
+  projectsStore.projects.map((project) => ({
+    name: project.title,
+    techStacks: project.techStacks,
+    summary: project.summary,
+    responsibilities: project.responsibilities,
+  })),
+)
 
-const profile = {
-  name: '李登凯',
-  target: '前端开发工程师',
-  summary: '专注 Vue 3、企业后台与内容平台建设，关注工程化质量、业务闭环与用户体验。',
-}
-
-const contacts: ContactItem[] = [
-  { label: '手机号', value: '17651707339' },
-  { label: '邮箱', value: 'k2280406@163.com' },
-  { label: 'GitHub', value: 'https://github.com/verlpro228/velpro-blog' },
-  { label: '博客', value: '站内知识库', href: '/knowledge' },
-]
-
-const skillGroups: SkillGroup[] = [
-  {
-    title: '基础',
-    items: ['HTML5 / CSS3 / JavaScript ES6+', 'TypeScript', '响应式布局 / 移动端适配', 'HTTP / RESTful API 协作'],
-  },
-  {
-    title: '框架',
-    items: ['Vue 3', 'Pinia / Vuex', 'Vue Router', 'Element Plus / Vant', 'Uniapp'],
-  },
-  {
-    title: '工程化',
-    items: ['Vite', 'Axios 封装', '动态路由与权限控制', 'Mock / 状态持久化', 'Git / pnpm'],
-  },
-]
-
-const projectExperiences: ResumeProject[] = [
-  {
-    name: 'CVita - AI心理健康助手',
-    techStacks: ['Vue 3', 'Vite', 'Element Plus', 'Pinia', 'ECharts', 'Axios', 'SSE'],
-    summary:
-      '基于 Vue 3 的 AI 心理健康服务平台，包含智能心理咨询、情绪日记、知识库 CMS 与后台数据分析模块，形成前后台双端闭环。',
-    responsibilities: [
-      '独立负责前端架构设计与核心模块拆分，完成用户端与后台管理端的页面搭建',
-      '实现基于 SSE 的流式 AI 对话、情绪识别与风险预警反馈链路',
-      '开发情绪日记、知识库 CMS、数据可视化看板等核心业务模块',
-      '封装请求拦截、路由守卫与通用组件，统一权限控制与交互反馈',
-    ],
-  },
-  {
-    name: 'CVita 在线简历生成平台',
-    techStacks: ['Vue 3', 'Vite 8', 'Vue Router 4', 'Element Plus', 'Tailwind CSS', 'GSAP 3', 'html2canvas', 'jsPDF'],
-    summary:
-      '独立开发的纯前端在线简历生成平台，支持实时预览、模板切换、PDF 导出、JSON 备份与本地持久化存储，兼顾可用性、隐私性与部署成本。',
-    responsibilities: [
-      '独立完成产品架构设计与前端工程搭建，覆盖首页、模板中心、编辑器与预览页四大核心模块',
-      '设计统一数据 Schema，支持 9 类简历模块配置，并通过 LocalStorage 实现本地持久化存储',
-      '开发所见即所得的双栏编辑器与 6 套模板切换能力，保证数据无损迁移与跨模板复用',
-      '基于 html2canvas + jsPDF 实现高精度 PDF 导出，并补齐 JSON 导入导出、模块拖拽、深色模式等体验能力',
-    ],
-  },
-  {
-    name: '医疗陪诊服务小程序',
-    techStacks: ['Uniapp', 'Vue 3', '微信小程序', 'Composition API', 'Vite', 'SCSS'],
-    summary:
-      '独立开发的医疗陪诊服务微信小程序，面向医院陪诊、代跑取药等场景，完成下单、支付、履约与服务对象管理等业务闭环。',
-    responsibilities: [
-      '负责小程序整体页面架构与组件化方案设计，组织核心业务流程',
-      '实现多服务类型差异化下单、订单状态流转与支付倒计时能力',
-      '接入微信登录、地址选择、导航等原生能力，完善用户服务链路',
-      '封装导航栏、日期时间选择器、倒计时与分享弹窗等业务组件',
-    ],
-  },
-]
-
-const educationList: EducationItem[] = [
-  {
-    school: '河南大学民生学院',
-    major: '本科 - 数据科学与大数据技术',
-    period: '2023 - 2027',
-  },
-]
-
-const timeline: TimelineItem[] = [
-  {
-    id: '1',
-    title: '夯实基础：HTML / CSS / JavaScript 核心语法与 DOM 操作',
-    period: '2025.09 - 2025.11',
-    description:
-      '掌握语义化标签、盒模型、Flex/Grid 布局与响应式设计原则。\n深入理解作用域链、闭包、事件循环和异步编程，建立对浏览器渲染流程的基础认知。',
-  },
-  {
-    id: '2',
-    title: '网络通信入门：Ajax 请求与前后端数据交互实践',
-    period: '2025.12',
-    description:
-      '熟练使用 fetch 与 axios 发起 HTTP 请求，处理 GET/POST 方法及参数传递。\n理解跨域原理与 JSON 数据解析流程，逐步建立前端客户端视角。',
-  },
-  {
-    id: '3',
-    title: '框架进阶：Vue 3 组合式 API 与组件化开发体系搭建',
-    period: '2026.01 - 2026.02',
-    description:
-      '系统学习 Composition API、响应式系统与生命周期管理。\n实践单文件组件开发模式，集成 Vue Router 与 Pinia/Vuex 组织页面与状态。',
-  },
-  {
-    id: '4',
-    title: '工程化落地：从项目实战到架构思维成型',
-    period: '2026.03 - 至今',
-    description:
-      '独立构建包含 H5 用户端与 PC 管理后台的双端应用，覆盖 CRUD、权限控制、订单流程等核心业务。\n引入 Vite、Axios 拦截器、动态路由生成与规范化工程流程，形成完整开发闭环意识。',
-  },
-]
+onMounted(() => {
+  projectsStore.fetchProjects()
+  profileStore.fetchProfile()
+})
 </script>
 
 <template>

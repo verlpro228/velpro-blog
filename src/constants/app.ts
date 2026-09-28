@@ -16,4 +16,7 @@ export const NAVIGATION_ITEMS = [
 
 export const ADMIN_NAVIGATION_ITEMS = [
   { label: '文档管理', path: '/admin/editor' },
+  { label: '项目管理', path: '/admin/projects' },
+  { label: '介绍管理', path: '/admin/profile' },
+  { label: '账号设置', path: '/admin/settings' },
 ] as const

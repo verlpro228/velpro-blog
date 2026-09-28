@@ -14,6 +14,14 @@ dist-ssr
 *.local
 .codex-*
 
+# Python & secrets
+.env
+__pycache__/
+*.py[cod]
+.venv/
+smoke.db
+scripts/docs-seed.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

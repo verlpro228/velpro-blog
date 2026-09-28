@@ -1,108 +1,32 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import Fuse from 'fuse.js'
 import AppDrawer from '@/components/common/AppDrawer.vue'
 import AppEmptyState from '@/components/common/AppEmptyState.vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
-import type { ProjectCard } from '@/types/content'
+import { useProjectsStore } from '@/store/modules/projects'
+
+const projectsStore = useProjectsStore()
 
 const category = ref('全部')
 const keyword = ref('')
 const detailVisible = ref(false)
 const activeProjectId = ref('')
 
-const categories = ['全部', 'AI 服务平台', '前端工具 SaaS', '微信小程序']
+const projects = computed(() => projectsStore.projects)
 
-const projects: ProjectCard[] = [
-  {
-    id: 'cvita',
-    title: 'CVita - AI 心理健康助手',
-    summary:
-      '基于 Vue 3 的 AI 心理健康服务平台，整合智能对话、情绪日记、内容知识库与运营分析能力。',
-    cover: '',
-    techStacks: ['Vue 3', 'Vite', 'Element Plus', 'Pinia', 'Vue Router', 'ECharts', 'Axios', 'SSE'],
-    category: 'AI 服务平台',
-    period: '2026.01 - 2026.03',
-    role: '负责前端架构设计与核心模块开发，覆盖用户端与后台内容管理端。',
-    highlights: ['SSE 流式对话', '情绪识别与风险分级', '知识库 CMS + 数据分析后台'],
-    features: [
-      '支持多会话 AI 对话与历史记录检索',
-      '支持情绪日志记录、趋势分析与反馈建议',
-      '支持内容发布、编辑、标签管理与图文预览',
-      '通过数据看板可视化核心业务指标',
-    ],
-    outcomes: [
-      '形成用户端与后台端协同闭环',
-      '显著提升内容运营效率与分析效率',
-      '完成可持续迭代的前端工程结构',
-    ],
-    metrics: [
-      { label: '核心模块', value: '4 大类' },
-      { label: '风险分级', value: '4 级' },
-      { label: '情绪标签', value: '8 类' },
-    ],
-  },
-  {
-    id: 'cvita-resume-platform',
-    title: 'CVita 在线简历生成平台',
-    summary:
-      '一款纯前端、零后端依赖的在线简历生成工具，支持简历编辑、实时预览、模板切换、PDF 导出与 JSON 备份，强调低门槛、隐私安全与跨设备使用体验。',
-    cover: '',
-    techStacks: ['Vue 3', 'Vite 8', 'Vue Router 4', 'Element Plus', 'Tailwind CSS', 'GSAP 3', 'html2canvas', 'jsPDF'],
-    category: '前端工具 SaaS',
-    period: '2025',
-    role: '独立负责产品设计、前端架构与核心功能开发，完成首页、模板中心、编辑器、预览页与部署上线全流程。',
-    highlights: ['纯前端零后端依赖', '6 套模板一键切换', 'PDF 导出 + JSON 导入导出'],
-    features: [
-      '设计统一数据 Schema，支持教育背景、项目经历、技能特长等 9 类简历模块灵活配置',
-      '实现左右分栏实时预览编辑器，左侧表单编辑与右侧 A4 简历预览同步更新',
-      '基于 html2canvas + jsPDF 实现高精度 PDF 导出，并处理字体加载、分页切割与图片兼容问题',
-      '支持 LocalStorage 本地持久化、JSON 导入导出、模块拖拽排序、深色模式与响应式布局',
-    ],
-    outcomes: [
-      '形成从首页引导、模板选择、内容编辑到导出交付的完整产品闭环',
-      '在纯前端架构下兼顾了隐私安全、部署成本与可扩展性',
-      '适合作为前端工程化、交互设计与工具型 SaaS 产品能力的综合展示案例',
-    ],
-    metrics: [
-      { label: '模板数量', value: '6 套' },
-      { label: '简历模块', value: '9 类' },
-      { label: '导出能力', value: 'PDF / JSON' },
-    ],
-  },
-  {
-    id: 'medical-mini-program',
-    title: '医疗陪诊服务小程序',
-    summary:
-      '基于 UniApp + Vue 3 的陪诊服务小程序，提供陪诊、取药、送检等服务场景下的完整下单流程。',
-    cover: '',
-    techStacks: ['UniApp', 'Vue 3', 'Composition API', 'Vite', 'SCSS'],
-    category: '微信小程序',
-    period: '2026.03 - 2026.04',
-    role: '独立负责项目架构、核心业务功能开发与微信生态能力接入。',
-    highlights: ['多服务类型下单', '订单全生命周期管理', '登录/导航/支付能力接入'],
-    features: [
-      '支持陪诊、代取药、送结果等多类型服务下单',
-      '支持订单创建、支付倒计时、状态流转与取消',
-      '支持就诊人信息管理与复用',
-      '封装导航栏、时间选择器、倒计时等业务组件',
-    ],
-    outcomes: [
-      '打通从浏览到下单支付的完整链路',
-      '建立统一一致的小程序交互体验',
-      '为后续多平台适配保留扩展空间',
-    ],
-    metrics: [
-      { label: '服务类型', value: '6 种' },
-      { label: '业务组件', value: '5+' },
-      { label: '闭环流程', value: '下单到履约' },
-    ],
-  },
-]
+const categories = computed(() => [
+  '全部',
+  ...new Set(projects.value.map((project) => project.category).filter(Boolean)),
+])
+
+onMounted(() => {
+  projectsStore.fetchProjects()
+})
 
 const projectEngine = computed(
   () =>
-    new Fuse(projects, {
+    new Fuse(projects.value, {
       keys: ['title', 'summary', 'techStacks', 'highlights', 'features'],
       threshold: 0.28,
       ignoreLocation: true,
@@ -112,8 +36,8 @@ const projectEngine = computed(
 const filteredProjects = computed(() => {
   const byCategory =
     category.value === '全部'
-      ? projects
-      : projects.filter((project) => project.category === category.value)
+      ? projects.value
+      : projects.value.filter((project) => project.category === category.value)
 
   if (!keyword.value.trim()) {
     return byCategory
@@ -124,7 +48,7 @@ const filteredProjects = computed(() => {
 })
 
 const activeProject = computed(
-  () => projects.find((project) => project.id === activeProjectId.value) ?? filteredProjects.value[0] ?? null,
+  () => projects.value.find((project) => project.id === activeProjectId.value) ?? filteredProjects.value[0] ?? null,
 )
 
 const openDetail = (projectId: string) => {
