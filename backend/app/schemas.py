@@ -74,6 +74,7 @@ class EducationItem(BaseModel):
     school: str
     major: str
     period: str
+    honors: str = ""
 
 
 class TimelineItem(BaseModel):

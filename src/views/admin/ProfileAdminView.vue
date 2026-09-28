@@ -40,7 +40,12 @@ const fillForm = (data: SiteProfile) => {
     title: group.title,
     itemsText: group.items.join('\n'),
   }))
-  form.education = data.education.map((item) => ({ ...item }))
+  form.education = data.education.map((item) => ({
+    school: item.school ?? '',
+    major: item.major ?? '',
+    period: item.period ?? '',
+    honors: item.honors ?? '',
+  }))
   form.timeline = data.timeline.map((item) => ({ ...item }))
 }
 
@@ -92,7 +97,7 @@ const removeContact = (index: number) => form.contacts.splice(index, 1)
 const addSkillGroup = () => form.skillGroups.push({ title: '', itemsText: '' })
 const removeSkillGroup = (index: number) => form.skillGroups.splice(index, 1)
 
-const addEducation = () => form.education.push({ school: '', major: '', period: '' })
+const addEducation = () => form.education.push({ school: '', major: '', period: '', honors: '' })
 const removeEducation = (index: number) => form.education.splice(index, 1)
 
 const addTimeline = () =>
@@ -164,12 +169,16 @@ const removeTimeline = (index: number) => form.timeline.splice(index, 1)
 
     <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
       <h3 class="app-heading text-lg font-semibold">教育背景</h3>
-      <div class="mt-6 space-y-3">
-        <div v-for="(item, index) in form.education" :key="index" class="grid gap-2 sm:grid-cols-[1fr_1fr_160px_auto]">
-          <el-input v-model="item.school" placeholder="学校" />
-          <el-input v-model="item.major" placeholder="学历 - 专业" />
-          <el-input v-model="item.period" placeholder="时间，如：2023 - 2027" />
-          <el-button plain type="danger" @click="removeEducation(index)">删除</el-button>
+      <div class="mt-6 space-y-4">
+        <div v-for="(item, index) in form.education" :key="index" class="app-card rounded-2xl p-4">
+          <div class="grid gap-2 sm:grid-cols-[1fr_1fr_160px_auto]">
+            <el-input v-model="item.school" placeholder="学校" />
+            <el-input v-model="item.major" placeholder="学历 - 专业" />
+            <el-input v-model="item.period" placeholder="时间，如：2023 - 2027" />
+            <el-button plain type="danger" @click="removeEducation(index)">删除</el-button>
+          </div>
+          <el-input v-model="item.honors" class="mt-3" type="textarea" :rows="3"
+            placeholder="获奖经历（可选）：顿号分隔或手动换行" />
         </div>
         <el-button plain @click="addEducation">添加教育经历</el-button>
       </div>

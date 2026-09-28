@@ -120,6 +120,10 @@ onMounted(() => {
                   </div>
                   <span class="app-chip px-3 py-1 text-xs">{{ item.period }}</span>
                 </div>
+                <div v-if="item.honors" class="mt-5 pt-4" style="border-top: 1px solid var(--color-border)">
+                  <p class="app-caption text-xs uppercase tracking-[0.18em]">获奖经历</p>
+                  <p class="app-copy mt-2 whitespace-pre-line text-sm leading-7">{{ item.honors }}</p>
+                </div>
               </div>
             </div>
           </section>

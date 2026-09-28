@@ -59,6 +59,7 @@ export interface EducationItem {
   school: string
   major: string
   period: string
+  honors: string
 }
 
 export interface SiteProfile {
