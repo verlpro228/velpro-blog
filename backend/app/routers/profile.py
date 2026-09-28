@@ -18,6 +18,8 @@ def serialize_profile(profile: SiteProfile) -> dict:
         "summary": profile.summary or "",
         "contacts": list(profile.contacts or []),
         "skillGroups": list(profile.skill_groups or []),
+        "skillDetails": profile.skill_details or "",
+        "experiences": list(profile.experiences or []),
         "education": list(profile.education or []),
         "timeline": list(profile.timeline or []),
     }
@@ -49,6 +51,8 @@ def update_site_profile(
     profile.summary = payload.summary
     profile.contacts = [item.model_dump() for item in payload.contacts]
     profile.skill_groups = [item.model_dump() for item in payload.skillGroups]
+    profile.skill_details = payload.skillDetails
+    profile.experiences = [item.model_dump() for item in payload.experiences]
     profile.education = [item.model_dump() for item in payload.education]
     profile.timeline = [item.model_dump() for item in payload.timeline]
 

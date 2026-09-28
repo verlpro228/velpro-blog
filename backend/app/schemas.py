@@ -70,6 +70,13 @@ class SkillGroup(BaseModel):
     items: list[str] = []
 
 
+class ExperienceItem(BaseModel):
+    company: str
+    position: str = ""
+    period: str = ""
+    content: str = ""
+
+
 class EducationItem(BaseModel):
     school: str
     major: str
@@ -90,6 +97,8 @@ class SiteProfilePayload(BaseModel):
     summary: str = ""
     contacts: list[ContactItem] = []
     skillGroups: list[SkillGroup] = []
+    skillDetails: str = ""
+    experiences: list[ExperienceItem] = []
     education: list[EducationItem] = []
     timeline: list[TimelineItem] = []
 

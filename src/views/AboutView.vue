@@ -15,6 +15,8 @@ const profile = computed(() => ({
 
 const contacts = computed(() => profileData.value?.contacts ?? [])
 const skillGroups = computed(() => profileData.value?.skillGroups ?? [])
+const skillDetails = computed(() => profileData.value?.skillDetails ?? '')
+const experiences = computed(() => profileData.value?.experiences ?? [])
 const educationList = computed(() => profileData.value?.education ?? [])
 const timeline = computed(() => profileData.value?.timeline ?? [])
 
@@ -77,6 +79,37 @@ onMounted(() => {
         </aside>
 
         <div class="space-y-6">
+          <section v-if="skillDetails" class="app-card rounded-[1.75rem] p-5 sm:p-7">
+            <div class="mb-6">
+              <p class="app-overline text-xs uppercase tracking-[0.28em]">专业技能</p>
+              <h2 class="app-heading mt-3 text-2xl font-semibold">专业技能</h2>
+            </div>
+            <div class="app-card-strong rounded-[1.5rem] p-5 sm:p-6">
+              <p class="app-copy whitespace-pre-line text-base leading-8">{{ skillDetails }}</p>
+            </div>
+          </section>
+
+          <section v-if="experiences.length" class="app-card rounded-[1.75rem] p-5 sm:p-7">
+            <p class="app-overline text-xs uppercase tracking-[0.28em]">工作经验</p>
+            <h2 class="app-heading mt-3 text-2xl font-semibold">工作经验</h2>
+            <div class="mt-6 space-y-4">
+              <div v-for="(item, index) in experiences" :key="index"
+                class="app-card-strong rounded-[1.5rem] p-5 sm:p-6">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 class="app-heading text-lg font-semibold">{{ item.company }}</h3>
+                    <p class="app-copy mt-2 text-sm">{{ item.position }}</p>
+                  </div>
+                  <span v-if="item.period" class="app-chip px-3 py-1 text-xs">{{ item.period }}</span>
+                </div>
+                <div v-if="item.content" class="mt-5 pt-4" style="border-top: 1px solid var(--color-border)">
+                  <p class="app-caption text-xs uppercase tracking-[0.18em]">工作内容</p>
+                  <p class="app-copy mt-2 whitespace-pre-line text-sm leading-7">{{ item.content }}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section class="app-card rounded-[1.75rem] p-5 sm:p-7">
             <div class="mb-6">
               <p class="app-overline text-xs uppercase tracking-[0.28em]">项目经验</p>

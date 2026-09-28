@@ -2,7 +2,13 @@
 import { onMounted, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useSiteProfileStore } from '@/store/modules/profile'
-import type { ContactItem, EducationItem, SiteProfile, TimelineItem } from '@/types/content'
+import type {
+  ContactItem,
+  EducationItem,
+  ExperienceItem,
+  SiteProfile,
+  TimelineItem,
+} from '@/types/content'
 
 interface SkillGroupForm {
   title: string
@@ -15,6 +21,8 @@ interface ProfileFormState {
   summary: string
   contacts: ContactItem[]
   skillGroups: SkillGroupForm[]
+  skillDetails: string
+  experiences: ExperienceItem[]
   education: EducationItem[]
   timeline: TimelineItem[]
 }
@@ -27,6 +35,8 @@ const form = reactive<ProfileFormState>({
   summary: '',
   contacts: [],
   skillGroups: [],
+  skillDetails: '',
+  experiences: [],
   education: [],
   timeline: [],
 })
@@ -39,6 +49,13 @@ const fillForm = (data: SiteProfile) => {
   form.skillGroups = data.skillGroups.map((group) => ({
     title: group.title,
     itemsText: group.items.join('\n'),
+  }))
+  form.skillDetails = data.skillDetails ?? ''
+  form.experiences = (data.experiences ?? []).map((item) => ({
+    company: item.company ?? '',
+    position: item.position ?? '',
+    period: item.period ?? '',
+    content: item.content ?? '',
   }))
   form.education = data.education.map((item) => ({
     school: item.school ?? '',
@@ -79,6 +96,8 @@ const handleSave = async () => {
             .map((line) => line.trim())
             .filter(Boolean),
         })),
+      skillDetails: form.skillDetails,
+      experiences: form.experiences.filter((item) => item.company.trim()),
       education: form.education.filter((item) => item.school.trim()),
       timeline: form.timeline
         .filter((item) => item.title.trim())
@@ -96,6 +115,10 @@ const removeContact = (index: number) => form.contacts.splice(index, 1)
 
 const addSkillGroup = () => form.skillGroups.push({ title: '', itemsText: '' })
 const removeSkillGroup = (index: number) => form.skillGroups.splice(index, 1)
+
+const addExperience = () =>
+  form.experiences.push({ company: '', position: '', period: '', content: '' })
+const removeExperience = (index: number) => form.experiences.splice(index, 1)
 
 const addEducation = () => form.education.push({ school: '', major: '', period: '', honors: '' })
 const removeEducation = (index: number) => form.education.splice(index, 1)
@@ -164,6 +187,30 @@ const removeTimeline = (index: number) => form.timeline.splice(index, 1)
           />
         </div>
         <el-button plain @click="addSkillGroup">添加技能分组</el-button>
+      </div>
+    </section>
+
+    <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
+      <h3 class="app-heading text-lg font-semibold">专业技能（详细描述）</h3>
+      <p class="app-caption mt-2 text-sm">展示在个人介绍页「项目经验」上方，支持换行排版</p>
+      <el-input v-model="form.skillDetails" class="mt-6" type="textarea" :rows="10"
+        placeholder="每行一条，例如：1. 前端基础：熟练掌握 HTML5、CSS3..." />
+    </section>
+
+    <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
+      <h3 class="app-heading text-lg font-semibold">工作经验</h3>
+      <div class="mt-6 space-y-4">
+        <div v-for="(item, index) in form.experiences" :key="index" class="app-card rounded-2xl p-4">
+          <div class="grid gap-2 sm:grid-cols-[1fr_1fr_180px_auto]">
+            <el-input v-model="item.company" placeholder="公司名称" />
+            <el-input v-model="item.position" placeholder="负责岗位，如：前端开发实习生" />
+            <el-input v-model="item.period" placeholder="时间，如：2026.02-2026.08" />
+            <el-button plain type="danger" @click="removeExperience(index)">删除</el-button>
+          </div>
+          <el-input v-model="item.content" class="mt-3" type="textarea" :rows="4"
+            placeholder="负责内容：工作职责与成果" />
+        </div>
+        <el-button plain @click="addExperience">添加工作经历</el-button>
       </div>
     </section>
 

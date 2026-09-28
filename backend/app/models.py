@@ -61,5 +61,9 @@ class SiteProfile(Base):
     summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
     contacts: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     skill_groups: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    # 专业技能详细描述（纯文本，支持换行）
+    skill_details: Mapped[str | None] = mapped_column(Text, nullable=True, default="")
+    # 工作经验：[{company, position, period, content}]
+    experiences: Mapped[list | None] = mapped_column(JSON, nullable=True, default=list)
     education: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     timeline: Mapped[list] = mapped_column(JSON, nullable=False, default=list)

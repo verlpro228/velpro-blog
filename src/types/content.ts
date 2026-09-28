@@ -55,6 +55,13 @@ export interface SkillGroup {
   items: string[]
 }
 
+export interface ExperienceItem {
+  company: string
+  position: string
+  period: string
+  content: string
+}
+
 export interface EducationItem {
   school: string
   major: string
@@ -68,6 +75,8 @@ export interface SiteProfile {
   summary: string
   contacts: ContactItem[]
   skillGroups: SkillGroup[]
+  skillDetails: string
+  experiences: ExperienceItem[]
   education: EducationItem[]
   timeline: TimelineItem[]
 }
