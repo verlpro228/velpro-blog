@@ -1,0 +1,131 @@
+- generic [ref=e1]:
+  - generic [ref=e38]:
+    - complementary [ref=e39]:
+      - button [ref=e40] [cursor=pointer]:
+        - paragraph [ref=e41]: 后台控制台
+        - heading "内容管理工作台" [level=2] [ref=e42]
+      - generic [ref=e43]:
+        - paragraph [ref=e44]: 当前用户
+        - paragraph [ref=e45]: Velpro
+        - paragraph [ref=e46]: Frontend Engineer
+      - navigation [ref=e47]:
+        - link "文档管理" [ref=e48] [cursor=pointer]:
+          - /url: "#/admin/editor"
+        - link "项目管理" [ref=e49] [cursor=pointer]:
+          - /url: "#/admin/projects"
+        - link "介绍管理" [ref=e50] [cursor=pointer]:
+          - /url: "#/admin/profile"
+        - link "账号设置" [ref=e51] [cursor=pointer]:
+          - /url: "#/admin/settings"
+      - generic [ref=e52]:
+        - button "返回站点" [ref=e53] [cursor=pointer]
+        - button "退出登录" [ref=e55] [cursor=pointer]
+    - main [ref=e57]:
+      - generic [ref=e58]:
+        - paragraph [ref=e59]: 工作区
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - heading "项目管理" [level=1] [ref=e468]
+            - paragraph [ref=e63]: 最近同步：09/28 20:50
+          - button "切换深色模式" [ref=e64] [cursor=pointer]
+      - generic [ref=e469]:
+        - generic [ref=e470]:
+          - generic [ref=e471]:
+            - paragraph [ref=e472]: 项目内容
+            - heading "项目列表" [level=2] [ref=e473]
+            - paragraph [ref=e474]: 项目展示页与个人介绍页的项目经验共用此数据
+          - generic [ref=e475]:
+            - button "刷新" [ref=e476] [cursor=pointer]
+            - button "新增项目" [ref=e478] [cursor=pointer]
+        - generic [ref=e482]:
+          - table [ref=e484]:
+            - rowgroup [ref=e492]:
+              - row [ref=e493]:
+                - columnheader "标题" [ref=e494]
+                - columnheader "分类" [ref=e496]
+                - columnheader "周期" [ref=e498]
+                - columnheader "排序" [ref=e500]
+                - columnheader "页面展示" [ref=e502]
+                - columnheader "操作" [ref=e504]
+          - table [ref=e510]:
+            - rowgroup [active] [ref=e518]:
+              - row [ref=e519]:
+                - cell "实验室信息化综合管理平台（LIMS）" [ref=e520]
+                - cell "企业级全栈项目" [ref=e522]
+                - cell "2026.02 - 2026.08" [ref=e524]
+                - cell "0" [ref=e526]
+                - cell [ref=e528]:
+                  - generic [ref=e530]:
+                    - switch [checked]
+                    - generic [ref=e531] [cursor=pointer]
+                - cell [ref=e533]:
+                  - generic [ref=e534]:
+                    - button "编辑" [ref=e535] [cursor=pointer]
+                    - button "删除" [ref=e537] [cursor=pointer]
+              - row [ref=e539]:
+                - cell "实验室信息化系统移动端" [ref=e540]
+                - cell "UniApp 多端项目" [ref=e542]
+                - cell "2026.02 - 2026.08" [ref=e544]
+                - cell "1" [ref=e546]
+                - cell [ref=e548]:
+                  - generic [ref=e550]:
+                    - switch [checked]
+                    - generic [ref=e551] [cursor=pointer]
+                - cell [ref=e553]:
+                  - generic [ref=e554]:
+                    - button "编辑" [ref=e555] [cursor=pointer]
+                    - button "删除" [ref=e557] [cursor=pointer]
+              - row [ref=e559]:
+                - cell "Vibe Coding AI 技术博客" [ref=e560]
+                - cell "AI 全栈项目" [ref=e562]
+                - cell "2025.10 - 至今" [ref=e564]
+                - cell "2" [ref=e566]
+                - cell [ref=e568]:
+                  - generic [ref=e570]:
+                    - switch
+                    - generic [ref=e571] [cursor=pointer]
+                - cell [ref=e573]:
+                  - generic [ref=e574]:
+                    - button "编辑" [ref=e575] [cursor=pointer]
+                    - button "删除" [ref=e577] [cursor=pointer]
+              - row [ref=e579]:
+                - cell "CVita - AI 心理健康助手" [ref=e580]
+                - cell "AI 服务平台" [ref=e582]
+                - cell "2026.01 - 2026.03" [ref=e584]
+                - cell "3" [ref=e586]
+                - cell [ref=e588]:
+                  - generic [ref=e590]:
+                    - switch [checked]
+                    - generic [ref=e591] [cursor=pointer]
+                - cell [ref=e593]:
+                  - generic [ref=e594]:
+                    - button "编辑" [ref=e595] [cursor=pointer]
+                    - button "删除" [ref=e597] [cursor=pointer]
+              - row [ref=e599]:
+                - cell "CVita 在线简历生成平台" [ref=e600]
+                - cell "前端工具 SaaS" [ref=e602]
+                - cell "2025" [ref=e604]
+                - cell "4" [ref=e606]
+                - cell [ref=e608]:
+                  - generic [ref=e610]:
+                    - switch [checked]
+                    - generic [ref=e611] [cursor=pointer]
+                - cell [ref=e613]:
+                  - generic [ref=e614]:
+                    - button "编辑" [ref=e615] [cursor=pointer]
+                    - button "删除" [ref=e617] [cursor=pointer]
+              - row [ref=e619]:
+                - cell "医疗陪诊服务小程序" [ref=e620]
+                - cell "微信小程序" [ref=e622]
+                - cell "2026.03 - 2026.04" [ref=e624]
+                - cell "5" [ref=e626]
+                - cell [ref=e628]:
+                  - generic [ref=e630]:
+                    - switch [checked]
+                    - generic [ref=e631] [cursor=pointer]
+                - cell [ref=e633]:
+                  - generic [ref=e634]:
+                    - button "编辑" [ref=e635] [cursor=pointer]
+                    - button "删除" [ref=e637] [cursor=pointer]
+  - alert [ref=e639]:
+    - paragraph [ref=e643]: 「Vibe Coding AI 技术博客」已隐藏，前台不再展示

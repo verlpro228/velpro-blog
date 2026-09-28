@@ -141,7 +141,10 @@ const removeTimeline = (index: number) => form.timeline.splice(index, 1)
     </div>
 
     <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
-      <h3 class="app-heading text-lg font-semibold">基本信息</h3>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="app-heading text-lg font-semibold">基本信息</h3>
+        <el-button plain size="small" type="primary" :loading="profileStore.saving" @click="handleSave">保存修改</el-button>
+      </div>
       <el-form class="mt-6" label-position="top">
         <div class="grid gap-4 sm:grid-cols-2">
           <el-form-item label="姓名" required>
@@ -152,13 +155,16 @@ const removeTimeline = (index: number) => form.timeline.splice(index, 1)
           </el-form-item>
         </div>
         <el-form-item label="个人简介">
-          <el-input v-model="form.summary" type="textarea" :rows="3" />
+          <el-input v-model="form.summary" type="textarea" :rows="6" placeholder="支持换行，前台按原样分行显示" />
         </el-form-item>
       </el-form>
     </section>
 
     <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
-      <h3 class="app-heading text-lg font-semibold">联系方式</h3>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="app-heading text-lg font-semibold">联系方式</h3>
+        <el-button plain size="small" type="primary" :loading="profileStore.saving" @click="handleSave">保存修改</el-button>
+      </div>
       <div class="mt-6 space-y-3">
         <div v-for="(item, index) in form.contacts" :key="index" class="grid gap-2 sm:grid-cols-[140px_1fr_1fr_auto]">
           <el-input v-model="item.label" placeholder="标签，如：邮箱" />
@@ -171,7 +177,10 @@ const removeTimeline = (index: number) => form.timeline.splice(index, 1)
     </section>
 
     <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
-      <h3 class="app-heading text-lg font-semibold">专业技能</h3>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="app-heading text-lg font-semibold">专业技能</h3>
+        <el-button plain size="small" type="primary" :loading="profileStore.saving" @click="handleSave">保存修改</el-button>
+      </div>
       <div class="mt-6 space-y-4">
         <div v-for="(group, index) in form.skillGroups" :key="index" class="app-card rounded-2xl p-4">
           <div class="flex gap-2">
@@ -191,14 +200,20 @@ const removeTimeline = (index: number) => form.timeline.splice(index, 1)
     </section>
 
     <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
-      <h3 class="app-heading text-lg font-semibold">专业技能（详细描述）</h3>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="app-heading text-lg font-semibold">专业技能（详细描述）</h3>
+        <el-button plain size="small" type="primary" :loading="profileStore.saving" @click="handleSave">保存修改</el-button>
+      </div>
       <p class="app-caption mt-2 text-sm">展示在个人介绍页「项目经验」上方，支持换行排版</p>
       <el-input v-model="form.skillDetails" class="mt-6" type="textarea" :rows="10"
         placeholder="每行一条，例如：1. 前端基础：熟练掌握 HTML5、CSS3..." />
     </section>
 
     <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
-      <h3 class="app-heading text-lg font-semibold">工作经验</h3>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="app-heading text-lg font-semibold">工作经验</h3>
+        <el-button plain size="small" type="primary" :loading="profileStore.saving" @click="handleSave">保存修改</el-button>
+      </div>
       <div class="mt-6 space-y-4">
         <div v-for="(item, index) in form.experiences" :key="index" class="app-card rounded-2xl p-4">
           <div class="grid gap-2 sm:grid-cols-[1fr_1fr_180px_auto]">
@@ -215,7 +230,10 @@ const removeTimeline = (index: number) => form.timeline.splice(index, 1)
     </section>
 
     <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
-      <h3 class="app-heading text-lg font-semibold">教育背景</h3>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="app-heading text-lg font-semibold">教育背景</h3>
+        <el-button plain size="small" type="primary" :loading="profileStore.saving" @click="handleSave">保存修改</el-button>
+      </div>
       <div class="mt-6 space-y-4">
         <div v-for="(item, index) in form.education" :key="index" class="app-card rounded-2xl p-4">
           <div class="grid gap-2 sm:grid-cols-[1fr_1fr_160px_auto]">
@@ -232,7 +250,10 @@ const removeTimeline = (index: number) => form.timeline.splice(index, 1)
     </section>
 
     <section class="app-panel rounded-[1.75rem] p-6 sm:p-8">
-      <h3 class="app-heading text-lg font-semibold">成长路径</h3>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="app-heading text-lg font-semibold">成长路径</h3>
+        <el-button plain size="small" type="primary" :loading="profileStore.saving" @click="handleSave">保存修改</el-button>
+      </div>
       <div class="mt-6 space-y-4">
         <div v-for="(item, index) in form.timeline" :key="item.id || index" class="app-card rounded-2xl p-4">
           <div class="grid gap-2 sm:grid-cols-[180px_1fr_auto]">

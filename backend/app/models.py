@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, String, Text
+from sqlalchemy import JSON, Boolean, String, Text
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -48,6 +48,8 @@ class Project(Base):
     responsibilities: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     metrics: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     sort_order: Mapped[int] = mapped_column(nullable=False, default=0)
+    # 是否在前台页面（项目展示 / 个人介绍）展示
+    visible: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
 class SiteProfile(Base):

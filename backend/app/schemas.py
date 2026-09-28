@@ -59,6 +59,10 @@ class ProjectMutationPayload(BaseModel):
     sortOrder: int = 0
 
 
+class ProjectVisibilityPayload(BaseModel):
+    visible: bool
+
+
 class ContactItem(BaseModel):
     label: str
     value: str

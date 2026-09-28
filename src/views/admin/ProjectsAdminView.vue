@@ -24,6 +24,7 @@ interface ProjectFormState {
 const projectsStore = useProjectsStore()
 const dialogVisible = ref(false)
 const isEditMode = ref(false)
+const visibilityUpdatingId = ref('')
 
 const createInitialForm = (): ProjectFormState => ({
   id: '',
@@ -70,8 +71,21 @@ const fillForm = (project: ProjectCard) => {
 }
 
 onMounted(() => {
-  projectsStore.fetchProjects()
+  projectsStore.fetchAdminProjects()
 })
+
+const handleToggleVisibility = async (project: ProjectCard, visible: boolean) => {
+  visibilityUpdatingId.value = project.id
+
+  try {
+    await projectsStore.toggleProjectVisibility(project.id, visible)
+    ElMessage.success(visible ? `「${project.title}」已在前台展示` : `「${project.title}」已隐藏，前台不再展示`)
+  } catch {
+    // http 拦截器已提示，switch 绑定的是服务端数据，失败会自动回滚
+  } finally {
+    visibilityUpdatingId.value = ''
+  }
+}
 
 const openCreateDialog = () => {
   resetForm()
@@ -154,7 +168,7 @@ const removeMetric = (index: number) => {
       </div>
 
       <div class="flex gap-3">
-        <el-button plain :loading="projectsStore.loading" @click="projectsStore.fetchProjects({ force: true })">
+        <el-button plain :loading="projectsStore.adminLoading" @click="projectsStore.fetchAdminProjects({ force: true })">
           刷新
         </el-button>
         <el-button type="primary" @click="openCreateDialog">新增项目</el-button>
@@ -162,11 +176,20 @@ const removeMetric = (index: number) => {
     </div>
 
     <div class="app-panel rounded-[1.75rem] p-4 sm:p-6">
-      <el-table :data="projectsStore.projects" v-loading="projectsStore.loading">
+      <el-table :data="projectsStore.adminProjects" v-loading="projectsStore.adminLoading">
         <el-table-column prop="title" label="标题" min-width="200" />
         <el-table-column prop="category" label="分类" width="140" />
         <el-table-column prop="period" label="周期" width="150" />
         <el-table-column prop="sortOrder" label="排序" width="80" align="center" />
+        <el-table-column label="页面展示" width="110" align="center">
+          <template #default="{ row }">
+            <el-switch
+              :model-value="row.visible"
+              :loading="visibilityUpdatingId === row.id"
+              @change="(value: string | number | boolean) => handleToggleVisibility(row, Boolean(value))"
+            />
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="150" align="center">
           <template #default="{ row }">
             <el-button link type="primary" @click="openEditDialog(row)">编辑</el-button>

@@ -45,7 +45,9 @@ onMounted(() => {
             <p class="app-overline text-xs uppercase tracking-[0.32em]">在线简历</p>
             <h1 class="app-heading mt-4 text-3xl font-semibold sm:text-4xl">{{ profile.name }}</h1>
             <p class="app-copy mt-3 text-base font-medium">{{ profile.target }}</p>
-            <p class="app-copy mt-4 text-sm leading-7">{{ profile.summary }}</p>
+            <div v-if="profile.summary" class="app-card-strong mt-4 rounded-[1.5rem] p-4 sm:p-5">
+              <p class="app-copy whitespace-pre-line text-sm leading-7">{{ profile.summary }}</p>
+            </div>
           </section>
 
           <section class="app-card rounded-[1.75rem] p-5 sm:p-7">

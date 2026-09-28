@@ -40,9 +40,11 @@ export interface ProjectCard {
   responsibilities: string[]
   metrics: ProjectMetric[]
   sortOrder: number
+  visible: boolean
 }
 
-export type ProjectMutationPayload = Omit<ProjectCard, 'id'>
+// visible 由列表开关单独控制，不随编辑弹窗一起提交
+export type ProjectMutationPayload = Omit<ProjectCard, 'id' | 'visible'>
 
 export interface ContactItem {
   label: string
