@@ -599,6 +599,13 @@ button {
   padding: 1rem;
 }
 
+/* 宽表格独立横向滚动，不撑破父容器（含单元格里的长代码/长 URL） */
+.markdown-body table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .markdown-body blockquote {
   margin: 1.25rem 0;
   border-left: 4px solid var(--color-primary);

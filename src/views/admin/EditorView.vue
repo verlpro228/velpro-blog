@@ -492,7 +492,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="grid gap-6" :class="editorMode === 'split' ? 'xl:grid-cols-[0.95fr_1.05fr]' : 'grid-cols-1'">
-        <div v-show="editorMode !== 'preview'" class="space-y-5">
+        <div v-show="editorMode !== 'preview'" class="min-w-0 space-y-5">
           <el-form label-position="top">
             <el-form-item label="标题">
               <el-input v-model="formState.title" placeholder="请输入文档标题" />
@@ -521,7 +521,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-show="editorMode !== 'write'"
-          class="editor-preview-panel flex h-[55vh] flex-col rounded-3xl p-4 shadow-inner sm:p-6 md:h-[70vh] xl:h-[100vh]">
+          class="editor-preview-panel flex h-[55vh] min-w-0 flex-col overflow-hidden rounded-3xl p-4 shadow-inner sm:p-6 md:h-[70vh] xl:h-[100vh]">
           <div class="mb-4 flex items-center justify-between">
             <p class="app-caption text-sm font-semibold">实时预览</p>
             <el-tag :type="hasUnsavedChanges ? 'warning' : 'success'" effect="plain">
@@ -530,7 +530,7 @@ onBeforeUnmount(() => {
           </div>
 
           <el-skeleton v-if="previewLoading" :rows="12" animated />
-          <div v-else class="markdown-body h-[97%] overflow-y-auto" v-html="previewContent" />
+          <div v-else class="markdown-body h-[97%] min-w-0 overflow-y-auto overflow-x-hidden" v-html="previewContent" />
         </div>
       </div>
 
@@ -595,6 +595,9 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(148, 163, 184, 0.22);
   background: var(--color-article-bg);
   color: var(--color-article-text);
+  /* 硬约束：预览区任何内容都不得撑出面板/弹窗 */
+  min-width: 0;
+  overflow: hidden;
 }
 
 .editor-confirm-overlay {
