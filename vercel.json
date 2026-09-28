@@ -1,12 +1,11 @@
 {
   "builds": [
-    { "src": "api/index.py", "use": "@vercel/python" },
+    { "src": "api/index.py", "use": "@vercel/python", "config": { "maxDuration": 60 } },
     { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
   ],
-  "rewrites": [{ "source": "/api/(.*)", "destination": "/api/index" }],
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 60
-    }
-  }
+  "routes": [
+    { "src": "/api/(.*)", "dest": "api/index.py" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
 }
