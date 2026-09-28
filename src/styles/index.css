@@ -556,6 +556,9 @@ button {
 .markdown-body {
   line-height: 1.85;
   color: var(--color-article-text);
+  /* 长 URL、连续英文、超长文本在容器内强制折行，不横向溢出（代码块 pre 已独立处理） */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .knowledge-markdown {

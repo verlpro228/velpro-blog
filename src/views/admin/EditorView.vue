@@ -514,8 +514,8 @@ onBeforeUnmount(() => {
             </el-form-item>
 
             <el-form-item label="Markdown 内容">
-              <el-input ref="markdownInputRef" v-model="formState.content" type="textarea" :rows="14"
-                placeholder="请输入 Markdown 内容" />
+              <el-input ref="markdownInputRef" v-model="formState.content" class="editor-markdown-input" type="textarea"
+                :rows="14" placeholder="请输入 Markdown 内容" />
             </el-form-item>
           </el-form>
         </div>
@@ -564,6 +564,13 @@ onBeforeUnmount(() => {
 <style scoped>
 .editor-shell {
   color: var(--color-text);
+}
+
+/* 长 URL、连续英文、超长文本一律在框内折行，不横向溢出 */
+.editor-markdown-input :deep(.el-textarea__inner) {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .editor-detail-card {
