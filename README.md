@@ -4,9 +4,9 @@
 
 **Vue 3 + FastAPI 打造的现代全栈个人博客**
 
-知识库 · 作品集 · 后台 CMS · AI 助手 · RSS 订阅 · 一次部署
+知识库 · 全文检索 · AI 总结与问答 · 数据看板 · 一次部署
 
-[在线演示](https://www.velpro.xyz) · [快速开始](#-快速开始) · [架构设计](#-全栈架构) · [API 概览](#-api-概览)
+[在线演示](https://www.velpro.xyz) · [快速开始](#-快速开始) · [架构设计](#-全栈架构) · [API 概览](#-api-概览) · [路线图](#-路线图)
 
 [![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=fff)](https://vuejs.org)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=fff)](https://vite.dev)
@@ -26,9 +26,9 @@ Velpro Blog 是一个**前后端一体的全栈个人博客系统**：前台负�
 
 - **前台** — 首页、知识库、归档、项目展示、个人介绍、留言板、友链七大页面，GSAP 滚动动画与 WebGL 背景
 - **知识库** — Markdown 渲染与代码高亮、全文模糊搜索、目录导航、上下篇导航、评论互动、阅读数据与多格式导出
+- **AI 能力** — 流式对话助手支持**边读边问**（自动注入当前文章上下文），文章支持一键 **AI 要点总结**；API Key 仅存服务端
 - **后台 CMS** — 数据看板与文档、项目、介绍三大内容模块可视化编辑，支持草稿与发布状态、图片上传压缩、项目展示开关，写作即发布
-- **后端 API** — FastAPI + SQLAlchemy + MySQL，统一 `{ code, data, message }` 响应契约，JWT 鉴权，并内置 RSS 订阅源
-- **AI 助手** — 基于智谱 GLM 的 SSE 流式对话，API Key 仅存服务端，不暴露给浏览器
+- **后端 API** — FastAPI + SQLAlchemy + MySQL，统一 `{ code, data, message }` 响应契约，JWT 鉴权，并内置全文输出 RSS 订阅源
 
 ## 🖥 预览
 
@@ -45,12 +45,13 @@ Velpro Blog 是一个**前后端一体的全栈个人博客系统**：前台负�
 
 ### 前台展示
 
-- **首页** — 动态 Hero、技术特点与使用路径介绍，GSAP 滚动动画与悬停交互
-- **知识库** — Fuse.js 模糊搜索（标题 / 标签 / 正文）、Markdown 渲染与代码高亮、目录导航（TOC，小屏内嵌折叠 / 大屏右侧吸附）、阅读进度追踪、代码一键复制、图片灯箱、上一篇/下一篇与相关阅读
+- **首页** — 动态 Hero + 实时站点统计（文档数 / 项目数 / 累计阅读），GSAP 滚动动画与悬停交互
+- **知识库** — Fuse.js 全文检索（标题 / 标签 / **正文**，命中片段高亮预览）、Markdown 渲染与代码高亮、目录导航（TOC，小屏内嵌折叠 / 大屏右侧吸附）、阅读进度追踪、断点续读、代码一键复制、图片灯箱、上一篇/下一篇与相关阅读
+- **AI 能力** — 文章一键 **AI 要点总结**（文章头部按钮 / 右上角胶囊双入口，流式生成、一键复制）；AI 助手在知识库页**自动关联当前文章**，可就内容直接提问（边读边问）
 - **标签体系** — 文章与列表中的标签可点击筛选，归档页提供标签云总览
-- **阅读足迹** — 最近阅读与文章收藏（localStorage 本地留存），侧栏独立卡片快速回跳
-- **全局命令面板** — 任意页面 `Ctrl+K` 唤起全局搜索（右上角玻璃胶囊同样可点），键盘上下选择、回车直达文章，支持正文级匹配
-- **内容互动** — 阅读量自动上报、文章点赞与收藏、基于 GitHub Discussions 的评论（Giscus，按文档独立讨论串、懒加载）、留言板、RSS 2.0 订阅
+- **阅读足迹** — 最近阅读与文章收藏（localStorage 本地留存），支持单条删除与一键清空
+- **全局命令面板** — 任意页面 `Ctrl+K` 或点击导航栏搜索按钮唤起，键盘上下选择、回车直达文章，支持正文级匹配与片段预览
+- **内容互动** — 阅读量自动上报、文章点赞与收藏、基于 GitHub Discussions 的评论（Giscus，按文档独立讨论串、懒加载）、留言板、全文输出 RSS 2.0 订阅
 - **归档与友链** — 文档按年份时间线归档、独立友链页与申请指引
 - **多格式导出** — 任意文档一键导出 Markdown / PDF / JSON；PDF 由前端按 A4 分页合成，避免跨页截断文字
 - **项目展示** — 分类筛选与模糊搜索、卡片式项目介绍，涵盖技术栈、角色职责、核心功能、交付成果与量化指标
@@ -69,6 +70,8 @@ Velpro Blog 是一个**前后端一体的全栈个人博客系统**：前台负�
 ### AI 助手（可选）
 
 - 内置流式对话助手，打字机式增量渲染，基于智谱 GLM 模型
+- **边读边问** — 在知识库页阅读时，助手自动关联当前文章（顶部显示关联提示），提问优先基于文章内容回答
+- **AI 要点总结** — 文章头部按钮或右上角胶囊一键生成 3~5 条核心要点，支持一键复制与重新生成
 - API Key 只保存在服务端，前端经由后端代理请求，不暴露凭证
 - 未配置 Key 时助手不可用，博客其余功能不受影响（详见 [AI 助手工作原理](#-ai-助手工作原理)）
 
@@ -293,7 +296,7 @@ velpro-blog/
 │   └── index.py              # Vercel Python 入口，导出 FastAPI app
 ├── backend/                  # 后端（FastAPI）
 │   ├── app/
-│   │   ├── routers/          # 路由模块：auth / docs / ai / projects / profile / rss
+│   │   ├── routers/          # 路由模块：auth / docs / ai / projects / profile / stats / rss
 │   │   ├── config.py         # pydantic-settings 环境配置
 │   │   ├── database.py       # SQLAlchemy 引擎 / 连接池 / Session
 │   │   ├── models.py         # 数据模型：Doc / User / Project / SiteProfile
@@ -304,14 +307,14 @@ velpro-blog/
 ├── scripts/                  # 数据脚本（文档导出 / 种子数据导入 / 数据库备份）
 ├── public/                   # 静态资源
 ├── src/
-│   ├── api/                  # Axios 封装（http.ts）与接口模块（auth / docs / ai / projects / profile）
-│   ├── components/           # 公共组件（common / home / knowledge）
+│   ├── api/                  # Axios 封装（http.ts）与接口模块（auth / docs / ai / projects / profile / stats）
+│   ├── components/           # 公共组件（common / home / knowledge / admin）
 │   ├── constants/            # 应用常量（导航 / 存储键）
 │   ├── data/                 # 历史静态文档种子（内容已迁入数据库，当前不再引用）
 │   ├── hooks/                # 组合式函数（动画 / 搜索 / 认证 / 主题 / 请求等）
 │   ├── layout/               # 布局组件（BaseLayout / AdminLayout）
 │   ├── router/               # 路由配置与登录守卫
-│   ├── store/                # Pinia 状态管理（user / docs / projects / profile）
+│   ├── store/                # Pinia 状态管理（user / docs / projects / profile / reading）
 │   ├── styles/               # 全局样式与 CSS 变量
 │   ├── types/                # TypeScript 类型定义
 │   ├── utils/                # 工具函数（Markdown 渲染 / 目录 / 存储 / 提示）
@@ -347,6 +350,26 @@ velpro-blog/
 | `/admin/profile`    | 介绍管理 | 需登录，站点资料编辑                     |
 | `/admin/settings`   | 账号设置 | 需登录，资料与密码修改                   |
 | `*`                 | 404      | 页面不存在                               |
+
+## ⌨️ 键盘快捷键
+
+| 快捷键            | 作用                                        |
+| ----------------- | ------------------------------------------- |
+| `Ctrl` / `Cmd + K` | 任意页面唤起全局搜索命令面板                |
+| `↑` / `↓`          | 命令面板中切换候选文章                      |
+| `Enter`           | 打开选中的文章                              |
+| `Esc`             | 关闭命令面板 / AI 助手 / 灯箱 / 抽屉        |
+
+## 🗺 路线图
+
+以下为计划中的演进方向（顺序不分先后，欢迎 Issue 讨论）：
+
+- [ ] 图片持久化存储（对象存储 / 图床，当前编辑器图片为本地预览）
+- [ ] 看板浏览趋势折线（按日计数表 `view_logs`）
+- [ ] 迁移 History 路由，解锁每页分享卡片（OG）与 sitemap
+- [ ] 数据库迁移引入 Alembic；补充 pytest / Vitest 自动化回归
+- [ ] AI 总结跨会话缓存、AI 助手接入站点级 RAG 检索
+- [ ] 评论邮件通知、访客统计
 
 ## 🚢 部署
 
