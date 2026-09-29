@@ -1,32 +1,32 @@
 <script setup lang="ts">
-import SectionTitle from '@/components/common/SectionTitle.vue'
+import SectionTitle from "@/components/common/SectionTitle.vue";
 
 const featureCards = [
   {
-    title: '快如闪电 · 稳如磐石',
+    title: "全栈自研 · 打通完整链路",
     description:
-      '页面秒开，切换无卡顿，享受丝滑浏览体验。精心打磨技术架构，只为让你少等待、多收获。',
+      "Vue 3 前端 → FastAPI 接口 → MySQL 持久化 → 云端部署，从页面到数据库的每一环都自己走通，不是套模板的静态博客。",
   },
   {
-    title: '内容不迷路 · 找得到也看得懂',
+    title: "内容在线管理 · 改完即生效",
     description:
-      '文章按主题分类，支持关键词搜索，还有“新手入门”、“面试高频”、“项目实战”等标签帮你快速定位。',
+      "内置 Markdown 编辑器与后台 CMS，文章、项目与个人资料都能随时增删改查，无需改代码、也不必重新部署。",
   },
   {
-    title: '一站式知识管家',
+    title: "AI 助手常驻 · 边读边问",
     description:
-      '不用切换工具、不用翻文件夹——你的知识库，就该这么顺手。',
+      "接入大模型并以 SSE 流式返回，支持多轮追问与随时终止；密钥只留在服务端，不会出现在浏览器里。",
   },
-]
+];
 </script>
 
 <template>
   <section class="deferred-section px-4 py-12 sm:px-6 sm:py-16">
     <div class="mx-auto max-w-7xl">
       <SectionTitle
-        eyebrow="核心价值"
-        title="这里不只是博客，更是你的知识加油站"
-        description="重点不在堆功能，而在让阅读、检索和维护都保持稳定、清晰和高效。"
+        eyebrow="网站特点"
+        title="这个站点本身就是一件前端作品"
+        description="从页面交互到接口设计，从数据持久化到部署上线，全部独立完成。"
       />
 
       <div class="mt-12 grid gap-6 md:grid-cols-3">
@@ -35,9 +35,13 @@ const featureCards = [
           :key="card.title"
           class="app-card feature-card interactive-card rounded-[1.75rem] p-5 sm:p-6"
         >
-          <p class="app-overline text-sm font-medium">模块价值</p>
-          <h3 class="app-heading mt-4 text-xl font-semibold sm:text-2xl">{{ card.title }}</h3>
-          <p class="app-copy mt-4 text-sm leading-7 sm:text-base">{{ card.description }}</p>
+          <p class="app-overline text-sm font-medium">核心能力</p>
+          <h3 class="app-heading mt-4 text-xl font-semibold sm:text-2xl">
+            {{ card.title }}
+          </h3>
+          <p class="app-copy mt-4 text-sm leading-7 sm:text-base">
+            {{ card.description }}
+          </p>
         </article>
       </div>
     </div>
