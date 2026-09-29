@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AiSummaryFab: typeof import('./components/common/AiSummaryFab.vue')['default']
     AppAiAssistant: typeof import('./components/common/AppAiAssistant.vue')['default']
     AppCommandPalette: typeof import('./components/common/AppCommandPalette.vue')['default']
     AppDrawer: typeof import('./components/common/AppDrawer.vue')['default']

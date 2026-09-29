@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { streamLongcatChatCompletion } from '@/api/modules/ai'
 import { renderMarkdown } from '@/utils/markdownRenderer'
 import { showToast } from '@/utils/toast'
+import { useDocsStore } from '@/store/modules/docs'
 import type { AiChatMessage } from '@/types/ai'
 
 interface AssistantMessage extends AiChatMessage {
@@ -10,6 +12,9 @@ interface AssistantMessage extends AiChatMessage {
 }
 
 const WELCOME_MESSAGE = '你好，我是站点 AI 助手。你可以直接问我项目、前端、知识库或页面内容相关的问题。'
+
+const route = useRoute()
+const docsStore = useDocsStore()
 
 const isVisible = ref(false)
 const isStreaming = ref(false)
@@ -30,6 +35,20 @@ const baseSystemMessage: AiChatMessage = {
   content:
     'You are the Velpro Blog front-end AI assistant. Keep responses concise, useful, and friendly. Prefer Chinese unless the user asks otherwise.',
 }
+
+// 边读边问：知识库页正在阅读的文章自动注入对话上下文（只在文章全文已加载时生效）
+const articleContextMessage = computed<AiChatMessage | null>(() => {
+  const doc = docsStore.currentDoc
+
+  if (route.path !== '/knowledge' || !doc?.content?.trim()) {
+    return null
+  }
+
+  return {
+    role: 'system',
+    content: `用户当前正在阅读知识库文章《${doc.title}》，正文如下：\n\n${doc.content}\n\n请优先结合这篇文章的内容回答用户的问题；若问题与文章无关，则按通用助手回答。`,
+  }
+})
 
 let previousBodyOverflow = ''
 let abortController: AbortController | null = null
@@ -159,6 +178,7 @@ async function submitMessage() {
 
   const requestMessages: AiChatMessage[] = [
     baseSystemMessage,
+    ...(articleContextMessage.value ? [articleContextMessage.value] : []),
     ...messages.value.map(({ role, content: currentContent }) => ({
       role,
       content: currentContent,
@@ -297,6 +317,14 @@ onBeforeUnmount(() => {
                   </button>
                 </div>
               </header>
+
+              <div v-if="articleContextMessage" class="ai-assistant__article-context" role="status">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span>已关联当前文章《{{ docsStore.currentDoc?.title }}》，可直接就内容提问</span>
+              </div>
 
               <section ref="messageViewportRef" class="ai-assistant__messages">
                 <article
@@ -917,5 +945,39 @@ onBeforeUnmount(() => {
   .ai-assistant__action-group {
     justify-content: flex-end;
   }
+}
+
+/* 边读边问：当前文章关联提示条 */
+.ai-assistant__article-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  border-radius: 12px;
+  background: rgba(8, 145, 178, 0.1);
+  color: #0e7490;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ai-assistant__article-context svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.ai-assistant__article-context span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root.theme-dark .ai-assistant__article-context {
+  border-color: rgba(34, 211, 238, 0.25);
+  background: rgba(34, 211, 238, 0.08);
+  color: #67e8f9;
 }
 </style>

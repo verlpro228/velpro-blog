@@ -13,6 +13,11 @@ const { logout } = useAuth()
 const { isDark, toggleTheme } = useTheme()
 const githubUrl = 'https://github.com/verlpro228/velpro-blog'
 
+// 通知 AppCommandPalette（挂载于 BaseLayout）打开全局搜索
+const openCommandPalette = () => {
+  window.dispatchEvent(new CustomEvent('palette:open'))
+}
+
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '切换深色模式'))
 </script>
@@ -44,6 +49,19 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
         </nav>
 
         <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+          <button
+            class="app-icon-button flex h-10 w-10 shrink-0 items-center justify-center border-0 p-0 shadow-md hover:shadow-lg sm:h-11 sm:w-11"
+            type="button"
+            aria-label="全局搜索（Ctrl+K）"
+            title="全局搜索（Ctrl+K）"
+            @click="openCommandPalette"
+          >
+            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="m16 16 4.5 4.5" />
+            </svg>
+          </button>
+
           <a
             class="app-icon-button flex h-10 w-10 shrink-0 items-center justify-center border-0 p-0 shadow-md hover:shadow-lg sm:h-11 sm:w-11"
             :href="githubUrl"

@@ -2,10 +2,10 @@
 import { computed } from 'vue'
 import AppEmptyState from '@/components/common/AppEmptyState.vue'
 import AppSkeletonLines from '@/components/common/AppSkeletonLines.vue'
-import type { KnowledgeDoc } from '@/types/content'
+import type { SearchableDoc } from '@/hooks/useKnowledgeSearch'
 
 const props = defineProps<{
-  docs: KnowledgeDoc[]
+  docs: SearchableDoc[]
   activeDocId: string
   loading: boolean
   keyword: string
@@ -28,9 +28,13 @@ function handleTagClick(tag: string) {
 // 忽略空格与大小写：正文常见"虚拟 DOM"这类中英文混排写法
 const normalizedKeyword = computed(() => props.keyword.trim().toLowerCase().replace(/\s+/g, ""))
 
-function isContentMatch(doc: KnowledgeDoc) {
+function isContentMatch(doc: SearchableDoc) {
   const content = (doc.content ?? "").toLowerCase().replace(/\s+/g, "")
   return Boolean(normalizedKeyword.value) && content.includes(normalizedKeyword.value)
+}
+
+function isSnippetHit(doc: SearchableDoc) {
+  return Boolean(normalizedKeyword.value && doc.snippet)
 }
 </script>
 
@@ -112,21 +116,27 @@ function isContentMatch(doc: KnowledgeDoc) {
               <span class="knowledge-list-item-date shrink-0 text-[11px] text-gray-400">{{ doc.createTime }}</span>
             </div>
 
-            <p class="knowledge-list-item-summary mt-2 line-clamp-2 text-sm leading-6 text-gray-500">
+            <p v-if="isSnippetHit(doc)" class="knowledge-list-item-snippet mt-2 line-clamp-2 text-sm leading-6 text-gray-600">
+              {{ doc.snippet?.before }}<mark class="snippet-hit">{{ doc.snippet?.hit }}</mark>{{ doc.snippet?.after }}
+            </p>
+            <p v-else class="knowledge-list-item-summary mt-2 line-clamp-2 text-sm leading-6 text-gray-500">
               {{ doc.summary }}
             </p>
 
             <div class="mt-3 flex flex-wrap gap-2">
-              <button
+              <!-- button 内不允许再嵌交互元素，标签用 span 承载点击 -->
+              <span
                 v-for="tag in doc.tags"
                 :key="tag"
-                type="button"
+                role="button"
+                tabindex="0"
                 class="knowledge-list-chip knowledge-list-chip--clickable rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500"
                 :title="`筛选「${tag}」相关文档`"
                 @click.stop="handleTagClick(tag)"
+                @keydown.enter.stop="handleTagClick(tag)"
               >
                 {{ tag }}
-              </button>
+              </span>
               <span
                 v-if="isContentMatch(doc)"
                 class="knowledge-list-chip knowledge-list-chip--match rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500"

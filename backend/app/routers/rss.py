@@ -35,7 +35,7 @@ def rss_feed(response: Response, db: Session = Depends(get_db)):
     knowledge_url = f"{site}/#/knowledge"
 
     rows = (
-        db.query(Doc.id, Doc.title, Doc.summary, Doc.create_time)
+        db.query(Doc.id, Doc.title, Doc.summary, Doc.content, Doc.create_time)
         .filter(Doc.status == "published")
         .order_by(Doc.create_time.desc(), Doc.id.desc())
         .limit(50)
@@ -44,6 +44,8 @@ def rss_feed(response: Response, db: Session = Depends(get_db)):
 
     items = []
     for doc in rows:
+        # 全文输出：CDATA 包裹让阅读器内直接读全文；content 中若出现 "]]>" 需拆分转义
+        cdata_content = (doc.content or "").replace("]]>", "]]]]><![CDATA[>")
         items.append(
             "<item>"
             f"<title>{escape(doc.title)}</title>"
@@ -52,7 +54,7 @@ def rss_feed(response: Response, db: Session = Depends(get_db)):
             f"{escape(doc.id)}"
             "</guid>"
             f"<pubDate>{escape(to_rfc822(doc.create_time))}</pubDate>"
-            f"<description>{escape(doc.summary or '')}</description>"
+            f"<description><![CDATA[{cdata_content}]]></description>"
             "</item>"
         )
 

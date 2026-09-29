@@ -4,11 +4,13 @@ import { useRouter } from 'vue-router'
 import Fuse from 'fuse.js'
 import { useDocsStore } from '@/store/modules/docs'
 import { useReadingStore } from '@/store/modules/reading'
+import { extractSnippet, extractSnippetFromIndices, type SnippetParts } from '@/utils/searchSnippet'
 
 interface PaletteResult {
   id: string
   title: string
   summary: string
+  snippet?: SnippetParts
   matchedFrom: 'content' | 'meta'
 }
 
@@ -27,6 +29,7 @@ const searchEngine = computed(
       keys: ['title', 'tags', 'content'],
       threshold: 0.3,
       ignoreLocation: true,
+      includeMatches: true,
     }),
 )
 
@@ -48,7 +51,18 @@ const results = computed<PaletteResult[]>(() => {
           ? 'meta'
           : 'content'
 
-      return { id: doc.id, title: doc.title, summary: doc.summary, matchedFrom }
+      const contentMatch = match.matches?.find((entry) => entry.key === 'content')
+      const snippet =
+        extractSnippet(doc.content ?? '', value) ??
+        (contentMatch ? extractSnippetFromIndices(contentMatch.value ?? '', contentMatch.indices) : null)
+
+      return {
+        id: doc.id,
+        title: doc.title,
+        summary: doc.summary,
+        snippet: snippet ?? undefined,
+        matchedFrom,
+      }
     })
 })
 
@@ -145,26 +159,19 @@ watch(open, (value) => {
 
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
+  // 导航栏搜索按钮等外部入口通过该事件打开面板
+  window.addEventListener('palette:open', openPalette as EventListener)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('palette:open', openPalette as EventListener)
   document.body.style.overflow = ''
 })
 </script>
 
 <template>
   <Teleport to="body">
-    <!-- 左上角胶囊入口：液态玻璃质感（同 AI 小助提示框），点击唤起全局搜索 -->
-    <button v-show="!open" type="button" class="palette-fab" title="全局搜索（Ctrl+K）" @click="openPalette">
-      <svg class="palette-fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <circle cx="11" cy="11" r="6.5" />
-        <path d="m16 16 4.5 4.5" />
-      </svg>
-      <span class="palette-fab-label">全局搜索</span>
-      <span class="palette-fab-keys"><kbd>Ctrl</kbd><kbd>K</kbd></span>
-    </button>
-
     <Transition name="palette-fade">
       <div v-if="open" class="palette-overlay" @click="closePalette">
         <div class="palette-panel" role="dialog" aria-modal="true" aria-label="全局搜索" @click.stop>
@@ -198,7 +205,10 @@ onBeforeUnmount(() => {
                 @click="goDoc(item.id)"
               >
                 <span class="palette-item-title">{{ item.title }}</span>
-                <span class="palette-item-desc">{{ item.matchedFrom === 'content' ? '正文匹配 · ' : '' }}{{ item.summary }}</span>
+                <span v-if="item.snippet" class="palette-item-desc">
+                  {{ item.snippet.before }}<mark class="snippet-hit">{{ item.snippet.hit }}</mark>{{ item.snippet.after }}
+                </span>
+                <span v-else class="palette-item-desc">{{ item.matchedFrom === 'content' ? '正文匹配 · ' : '' }}{{ item.summary }}</span>
               </button>
 
               <p v-if="!results.length" class="palette-empty">

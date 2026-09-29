@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { onClickOutside } from '@vueuse/core'
+import { useDebounceFn, onClickOutside } from '@vueuse/core'
 import AppEmptyState from '@/components/common/AppEmptyState.vue'
 import AppSkeletonLines from '@/components/common/AppSkeletonLines.vue'
 import ProgressBar from '@/components/common/ProgressBar.vue'
@@ -15,6 +15,7 @@ import { useKnowledgeSearch } from '@/hooks/useKnowledgeSearch'
 import { useReadingProgress } from '@/hooks/useReadingProgress'
 import { useDocsStore } from '@/store/modules/docs'
 import { useReadingStore } from '@/store/modules/reading'
+import { useAiSummary } from '@/hooks/useAiSummary'
 import { showToast } from '@/utils/toast'
 import { extractToc } from '@/utils/markdown'
 import { estimateReadingMinutes } from '@/utils/readingTime'
@@ -212,6 +213,68 @@ const isLiked = computed(() => (currentDoc.value ? docsStore.isDocLiked(currentD
 
 const isStarred = computed(() => (currentDoc.value ? readingStore.isStarred(currentDoc.value.id) : false))
 
+// ===== 断点续读：记录阅读进度，进入文章时提示"上次读到 x%" =====
+const resumeDismissedIds = ref(new Set<string>())
+
+const resumePercent = computed(() => {
+  const docId = currentDoc.value?.id
+  const percent = docId ? readingStore.progressMap[docId] : undefined
+
+  if (!docId || percent === undefined || resumeDismissedIds.value.has(docId)) {
+    return null
+  }
+
+  return percent
+})
+
+const saveProgress = useDebounceFn((percent: number) => {
+  const docId = currentDoc.value?.id
+
+  if (docId) {
+    readingStore.saveProgress(docId, percent)
+  }
+}, 1500)
+
+watch(progress, (value) => {
+  if (currentDoc.value) {
+    saveProgress(value)
+  }
+})
+
+function continueReading() {
+  const container = articleContainerRef.value
+  const percent = resumePercent.value
+
+  if (!container || percent === null) {
+    return
+  }
+
+  // 与 useReadingProgress 的 page 模式公式一致，按百分比反推滚动位置
+  const containerTop = window.scrollY + container.getBoundingClientRect().top
+  const containerHeight = container.offsetHeight
+  const viewportHeight = window.innerHeight
+  const topOffset = 112
+  const scrollStart = Math.max(0, containerTop - topOffset)
+  const scrollEnd = Math.max(scrollStart + 1, containerTop + containerHeight - viewportHeight + topOffset)
+
+  window.scrollTo({
+    top: scrollStart + (percent / 100) * (scrollEnd - scrollStart),
+    behavior: 'smooth',
+  })
+
+  if (currentDoc.value) {
+    resumeDismissedIds.value = new Set([...resumeDismissedIds.value, currentDoc.value.id])
+  }
+}
+
+function dismissResume() {
+  const docId = currentDoc.value?.id
+
+  if (docId) {
+    resumeDismissedIds.value = new Set([...resumeDismissedIds.value, docId])
+  }
+}
+
 function handleStar() {
   const doc = currentDoc.value
 
@@ -227,6 +290,9 @@ function handleStar() {
 function applyTagFilter(tag: string) {
   keyword.value = tag
 }
+
+// ===== B1：文章 AI 总结（逻辑在 useAiSummary 单例，与右上角 AI 胶囊共享状态） =====
+const { aiSummary, aiSummaryState, aiSummaryError, generate: generateAiSummary, dismiss: dismissAiSummary, refresh: refreshAiSummary, restoreFor: restoreAiSummaryFor } = useAiSummary()
 
 async function handleLike() {
   const doc = currentDoc.value
@@ -277,6 +343,9 @@ watch(
     if (currentDoc.value) {
       readingStore.recordRead(currentDoc.value)
     }
+
+    // 切换文档：终止进行中的总结请求，恢复该文档的已有摘要
+    restoreAiSummaryFor(docId)
 
     isTocOpen.value = false
 
@@ -420,6 +489,20 @@ onBeforeUnmount(() => {
                     </button>
                   </div>
 
+                  <button
+                    type="button"
+                    class="knowledge-export-trigger inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-white hover:text-slate-900"
+                    :disabled="aiSummaryState === 'loading'"
+                    title="用 AI 生成本文要点总结"
+                    @click="currentDoc && generateAiSummary(currentDoc)"
+                  >
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" />
+                      <path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z" />
+                    </svg>
+                    <span>{{ aiSummaryState === 'loading' ? '生成中…' : 'AI 总结' }}</span>
+                  </button>
+
                   <div ref="exportWrapperRef" class="relative">
                     <button
                       type="button"
@@ -495,6 +578,66 @@ onBeforeUnmount(() => {
                   {{ currentDoc.summary }}
                 </p>
               </header>
+
+              <div v-if="resumePercent !== null" class="knowledge-resume-bar mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3">
+                <svg class="h-4 w-4 flex-none text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <polyline points="12 7 12 12 15 14" />
+                </svg>
+                <span class="text-sm text-slate-600">上次读到 <strong class="font-semibold text-cyan-700">{{ resumePercent }}%</strong>，从断点继续？</span>
+                <button
+                  type="button"
+                  class="rounded-full bg-cyan-600 px-4 py-1.5 text-xs font-medium text-white transition hover:bg-cyan-700"
+                  @click="continueReading"
+                >
+                  继续阅读
+                </button>
+                <button
+                  type="button"
+                  class="ml-auto text-xs text-slate-400 transition hover:text-slate-600"
+                  @click="dismissResume"
+                >
+                  从头开始
+                </button>
+              </div>
+
+              <div v-if="aiSummaryState !== 'idle'" class="knowledge-ai-summary mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                <div class="flex items-center justify-between gap-3">
+                  <p class="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                    <svg class="h-4 w-4 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" />
+                    </svg>
+                    AI 摘要
+                    <span v-if="aiSummaryState === 'loading'" class="text-xs font-normal text-slate-400">生成中，请稍候…</span>
+                  </p>
+
+                  <div class="flex items-center gap-2">
+                    <button
+                      v-if="aiSummaryState === 'done' || aiSummaryState === 'error'"
+                      type="button"
+                      class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500 transition hover:text-slate-900"
+                      @click="currentDoc && refreshAiSummary(currentDoc)"
+                    >
+                      重新生成
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500 transition hover:text-slate-900"
+                      @click="dismissAiSummary"
+                    >
+                      收起
+                    </button>
+                  </div>
+                </div>
+
+                <p v-if="aiSummaryError" class="mt-3 text-sm leading-6 text-rose-500">{{ aiSummaryError }}</p>
+
+                <p v-else class="ai-summary-content mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
+                  {{ aiSummary }}<span v-if="aiSummaryState === 'loading'" class="ai-summary-cursor" aria-hidden="true">▍</span>
+                </p>
+
+                <p class="mt-3 text-[11px] leading-4 text-slate-400">由 AI 生成，仅供参考；同一个会话内切换文章会保留各自的摘要。</p>
+              </div>
 
               <div v-if="tocItems.length" class="doc-toc-inline mb-8 rounded-2xl border border-slate-200 bg-slate-50 2xl:hidden">
                 <button

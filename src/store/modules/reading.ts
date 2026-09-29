@@ -10,6 +10,8 @@ export interface ReadingHistoryItem {
 interface ReadingState {
   history: ReadingHistoryItem[]
   starredIds: string[]
+  // 文档阅读进度（百分比 0-100），供"上次读到 xx%"断点续读；读完（≥95）自动清除
+  progressMap: Record<string, number>
 }
 
 const HISTORY_LIMIT = 20
@@ -18,6 +20,7 @@ export const useReadingStore = defineStore('reading', {
   state: (): ReadingState => ({
     history: [],
     starredIds: [],
+    progressMap: {},
   }),
   getters: {
     starredSet(state) {
@@ -43,9 +46,29 @@ export const useReadingStore = defineStore('reading', {
       this.starredIds = [doc.id, ...this.starredIds]
       return true
     },
+    saveProgress(docId: string, percent: number) {
+      if (percent >= 95) {
+        // 读到结尾即视为读完，清除断点
+        delete this.progressMap[docId]
+        return
+      }
+
+      if (percent >= 5) {
+        this.progressMap[docId] = Math.round(percent)
+      }
+    },
+    removeHistory(docId: string) {
+      this.history = this.history.filter((item) => item.id !== docId)
+    },
+    clearHistory() {
+      this.history = []
+    },
+    clearProgress(docId: string) {
+      delete this.progressMap[docId]
+    },
   },
   persist: {
     key: 'velpro_blog_reading',
-    pick: ['history', 'starredIds'],
+    pick: ['history', 'starredIds', 'progressMap'],
   },
 })
