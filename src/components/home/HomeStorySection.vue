@@ -3,9 +3,9 @@ import SectionTitle from "@/components/common/SectionTitle.vue";
 
 const workflow = [
   {
-    title: "先找到：模糊检索直达目标",
+    title: "先找到：全文检索直达目标",
     description:
-      "基于 Fuse.js 的模糊检索覆盖标题与标签，配合输入防抖，关键词记不全也能命中想要的那一篇。",
+      "基于 Fuse.js 的全文检索覆盖标题、标签与正文，配合输入防抖，关键词记不全也能命中想要的那一篇。",
   },
   {
     title: "再读懂：AI 助手随时答疑",

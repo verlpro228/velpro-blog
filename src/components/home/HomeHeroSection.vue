@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { usePreferredReducedMotion } from "@vueuse/core";
+import { useDocsStore } from "@/store/modules/docs";
+import { useProjectsStore } from "@/store/modules/projects";
 
 interface VantaEffect {
   destroy: () => void;
@@ -10,11 +12,30 @@ interface VantaEffect {
 const heroTitle = "阅读 · 检索 · 对话";
 const heroChars = Array.from(heroTitle);
 
-const heroMetrics = [
-  { label: "技术架构", value: "全栈自研" },
-  { label: "AI 交互", value: "SSE 流式" },
-  { label: "内容管理", value: "在线 CMS" },
-];
+const docsStore = useDocsStore();
+const projectsStore = useProjectsStore();
+
+// 首页实时统计：公开接口 + store 缓存（30s/60s），已访问过的用户零额外请求
+const siteStatsReady = computed(() => docsStore.initialized && !docsStore.loading);
+
+const totalViews = computed(() =>
+  docsStore.docs.reduce((sum, doc) => sum + (doc.views ?? 0), 0),
+);
+
+const heroMetrics = computed(() => [
+  {
+    label: "已发布文档",
+    value: siteStatsReady.value ? `${docsStore.docs.length} 篇` : "—",
+  },
+  {
+    label: "在线项目",
+    value: siteStatsReady.value && projectsStore.initialized ? `${projectsStore.projects.length} 个` : "—",
+  },
+  {
+    label: "累计阅读",
+    value: siteStatsReady.value ? totalViews.value.toLocaleString() : "—",
+  },
+]);
 
 const capabilityTags = [
   "Vue 3",
@@ -145,6 +166,15 @@ onMounted(async () => {
   await nextTick();
   scheduleVanta();
   window.addEventListener("resize", handleViewportChange, { passive: true });
+
+  // 拉取公开数据供 hero 统计卡展示（有缓存与 TTL，重复访问零请求）
+  if (!docsStore.initialized) {
+    void docsStore.fetchDocs();
+  }
+
+  if (!projectsStore.initialized) {
+    void projectsStore.fetchProjects();
+  }
 });
 
 onBeforeUnmount(() => {
@@ -186,9 +216,8 @@ onBeforeUnmount(() => {
         <p
           class="app-copy hero-copy max-w-2xl text-base leading-7 sm:text-lg sm:leading-8"
         >
-          用 Vue 3 + FastAPI 从零搭建的个人技术站：Markdown
-          在线管理、模糊检索、阅读进度跟随，内置 AI
-          助手流式答疑，每篇文章都可一键导出 MD / PDF / JSON。
+          用 Vue 3 + FastAPI 从零搭建的个人技术站：全文检索与目录导航、阅读进度跟随，支持评论互动与
+          AI 助手流式答疑，每篇文章都可一键导出 MD / PDF / JSON。
         </p>
 
         <div class="hero-copy mt-6 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
