@@ -23,6 +23,16 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/KnowledgeView.vue'),
         meta: {
           title: '知识库',
+          description: '前端技术知识库：React、Vue、CSS、JavaScript、网络与工程化等核心知识点系统梳理，支持模糊检索、AI 答疑与多格式导出。',
+        },
+      },
+      {
+        path: 'archive',
+        name: 'archive',
+        component: () => import('@/views/ArchiveView.vue'),
+        meta: {
+          title: '归档',
+          description: '全部已发布文档的时间线归档，按年份回看每一篇技术沉淀。',
         },
       },
       {
@@ -31,6 +41,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/ProjectsView.vue'),
         meta: {
           title: '项目展示',
+          description: '个人项目作品集：企业级全栈平台、UniApp 多端应用与 AI 产品的技术方案与实现细节。',
         },
       },
       {
@@ -39,6 +50,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/AboutView.vue'),
         meta: {
           title: '个人介绍',
+          description: '前端开发工程师个人介绍：专业技能、工作经验、项目经历、教育背景与技术成长路径。',
         },
       },
     ],

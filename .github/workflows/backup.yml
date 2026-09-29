@@ -1,0 +1,47 @@
+# 数据库内容自动备份：每周导出 docs / projects / site_profile 为 JSON 提交到本仓库。
+# 前置条件：在仓库 Settings → Secrets and variables → Actions 配置 secret `DATABASE_URL`
+# （Aiven MySQL 连接串，与 .env 中一致；绝不写死在代码里）。
+# 安全约定：备份脚本永远不导出 users 表（含密码哈希）。
+
+name: database-backup
+
+on:
+  schedule:
+    # 每周日 20:00 UTC（北京时间周一 04:00）
+    - cron: "0 20 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 安装依赖
+        run: pip install "sqlalchemy>=2.0,<3" "pymysql>=1.1,<2" "cryptography>=43"
+
+      - name: 导出数据库内容
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/backup_db.py
+
+      - name: 提交备份文件
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backups/
+          if git diff --cached --quiet; then
+            echo "内容无变化，跳过提交"
+          else
+            git commit -m "chore: 数据库内容自动备份 $(date +%F) [skip ci]"
+            git push
+          fi

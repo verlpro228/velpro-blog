@@ -6,8 +6,9 @@ import { ElMessage } from 'element-plus'
 import { STORAGE_KEYS } from '@/constants/app'
 import { useAsyncMarkdown } from '@/hooks/useAsyncMarkdown'
 import { useDocsStore } from '@/store/modules/docs'
-import type { DocMutationPayload } from '@/types/content'
+import type { DocMutationPayload, DocStatus } from '@/types/content'
 import { getLocalStorage, removeLocalStorage, setLocalStorage } from '@/utils/storage'
+import { compressImageFile, formatImageSize } from '@/utils/imageCompress'
 
 type EditorMode = 'write' | 'preview' | 'split'
 type ConfirmButtonType = 'primary' | 'danger' | 'warning'
@@ -17,6 +18,7 @@ interface DocFormState {
   title: string
   summary: string
   tags: string[]
+  status: DocStatus
   content: string
 }
 
@@ -52,11 +54,22 @@ const createInitialState = (): DocFormState => ({
   title: '',
   summary: '',
   tags: [],
+  status: 'published',
   content: '# 新文档\n\n从这里开始撰写内容。',
 })
 
 const formState = reactive<DocFormState>(createInitialState())
 const { html: previewContent, loading: previewLoading, render: renderPreview } = useAsyncMarkdown()
+
+// 本次编辑期间已上传的图片（本地 blob 预览，点击可放大）
+interface UploadedImage {
+  url: string
+  name: string
+  originalSize: number
+  compressedSize: number
+}
+
+const uploadedImages = ref<UploadedImage[]>([])
 
 const syncLabel = computed(() => {
   if (!docsStore.lastFetchedAt) {
@@ -161,7 +174,8 @@ const assignFormState = (payload: Partial<DocFormState>) => {
 }
 
 const initializeEditor = async () => {
-  await docsStore.fetchDocs()
+  // 后台拉全量（含草稿）；公开页挂载时会重新拉公开列表，两边互不残留
+  await docsStore.fetchDocs({ includeDrafts: true })
 }
 
 const resetForm = () => {
@@ -191,6 +205,7 @@ const restoreDraft = (storageKey: string) => {
 
 const openCreateDialog = () => {
   resetForm()
+  uploadedImages.value = []
   restoreDraft(`${STORAGE_KEYS.editorDraft}:new`)
   isEditMode.value = false
   dialogVisible.value = true
@@ -208,6 +223,7 @@ const openEditDialog = async (docId: string) => {
   // 列表接口不含全文，打开编辑前按需加载（已加载过则命中缓存）
   await docsStore.loadDocContent(docId)
 
+  uploadedImages.value = []
   const restored = restoreDraft(`${STORAGE_KEYS.editorDraft}:${docId}`)
 
   if (!restored) {
@@ -216,6 +232,7 @@ const openEditDialog = async (docId: string) => {
       title: target.title,
       summary: target.summary,
       tags: [...target.tags],
+      status: target.status ?? 'published',
       content: target.content,
     })
     draftSavedAt.value = ''
@@ -309,6 +326,7 @@ const buildPayload = (): DocMutationPayload | null => {
     summary: formState.summary.trim(),
     tags,
     content: formState.content,
+    status: formState.status,
   }
 }
 
@@ -343,10 +361,33 @@ const handleDelete = async (docId: string) => {
 }
 
 const handleMockUpload = async (options: UploadRequestOptions) => {
-  const url = URL.createObjectURL(options.file as Blob)
-  formState.content += `\n\n![${options.file.name}](${url})\n`
-  options.onSuccess?.({ url })
-  ElMessage.success('图片已插入 Markdown 内容')
+  const rawFile = options.file as File
+
+  try {
+    const compressed = await compressImageFile(rawFile)
+    const url = URL.createObjectURL(compressed)
+
+    formState.content += `\n\n![${compressed.name}](${url})\n`
+    uploadedImages.value = [
+      ...uploadedImages.value,
+      {
+        url,
+        name: compressed.name,
+        originalSize: rawFile.size,
+        compressedSize: compressed.size,
+      },
+    ]
+
+    if (compressed.size < rawFile.size) {
+      ElMessage.success(`图片已压缩插入（${formatImageSize(rawFile.size)} → ${formatImageSize(compressed.size)}）`)
+    } else {
+      ElMessage.success('图片已插入 Markdown 内容')
+    }
+
+    options.onSuccess?.({ url })
+  } catch {
+    ElMessage.error('图片处理失败，请重试')
+  }
 }
 
 const handleDialogBeforeClose = async (done: () => void) => {
@@ -396,7 +437,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="editor-shell h-screen overflow-y-auto px-4 py-5 sm:px-8 sm:py-8">
+  <section class="editor-shell px-4 py-5 sm:px-8 sm:py-8">
     <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
       <div>
         <p class="app-overline text-xs uppercase tracking-[0.32em]">内容管理</p>
@@ -431,18 +472,30 @@ onBeforeUnmount(() => {
 
     <div class="app-panel-strong rounded-[1.75rem] p-4 sm:p-5">
       <div class="overflow-x-auto">
-        <el-table :data="docsStore.docs" :loading="docsStore.loading" stripe style="min-width: 860px">
+        <el-table :data="docsStore.docs" :loading="docsStore.loading" stripe style="min-width: 1020px">
         <el-table-column prop="title" label="标题" min-width="220" />
-        <el-table-column prop="summary" label="简介" min-width="280" show-overflow-tooltip />
-        <el-table-column label="标签" min-width="220">
+        <el-table-column prop="summary" label="简介" min-width="260" show-overflow-tooltip />
+        <el-table-column label="标签" min-width="200">
           <template #default="{ row }">
             <div class="flex flex-wrap gap-2">
               <el-tag v-for="tag in row.tags" :key="tag" effect="dark">{{ tag }}</el-tag>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" min-width="140" />
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="状态" width="92">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'draft' ? 'warning' : 'success'" effect="plain">
+              {{ row.status === 'draft' ? '草稿' : '已发布' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="数据" width="128">
+          <template #default="{ row }">
+            <span class="text-xs text-slate-500">阅 {{ row.views ?? 0 }} · 赞 {{ row.likes ?? 0 }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="创建时间" min-width="120" />
+        <el-table-column label="操作" width="140">
           <template #default="{ row }">
             <div class="flex gap-2">
               <el-button link type="primary" @click="openEditDialog(row.id)">编辑</el-button>
@@ -507,10 +560,40 @@ onBeforeUnmount(() => {
                 placeholder="输入标签后回车创建" />
             </el-form-item>
 
-            <el-form-item label="插入图片（mock）">
+            <el-form-item label="发布状态">
+              <div class="flex w-full items-center gap-3">
+                <el-switch v-model="formState.status" active-value="published" inactive-value="draft" />
+                <span class="app-caption text-sm">
+                  {{ formState.status === 'draft' ? '草稿：仅后台可见，前台不展示' : '已发布：知识库与归档页可见' }}
+                </span>
+              </div>
+            </el-form-item>
+
+            <el-form-item label="插入图片（自动压缩至 1MB 内）">
               <el-upload :http-request="handleMockUpload" :show-file-list="false" accept="image/*">
                 <el-button>上传并插入 Markdown</el-button>
               </el-upload>
+
+              <div v-if="uploadedImages.length" class="mt-3 w-full">
+                <p class="app-caption text-xs">本次上传的图片（点击可预览）：</p>
+                <div class="mt-2 flex flex-wrap gap-3">
+                  <el-image
+                    v-for="image in uploadedImages"
+                    :key="image.url"
+                    :src="image.url"
+                    :preview-src-list="[image.url]"
+                    :preview-teleported="true"
+                    hide-on-click-modal
+                    fit="cover"
+                    class="editor-upload-thumb h-20 w-20 cursor-zoom-in rounded-xl border"
+                  >
+                    <template #error>
+                      <div class="flex h-full w-full items-center justify-center text-xs text-slate-400">预览失败</div>
+                    </template>
+                  </el-image>
+                </div>
+              </div>
+              <p v-else class="app-caption mt-1 text-xs">上传后图片会显示在这里，点击缩略图可放大预览。</p>
             </el-form-item>
 
             <el-form-item label="Markdown 内容">
@@ -564,6 +647,15 @@ onBeforeUnmount(() => {
 <style scoped>
 .editor-shell {
   color: var(--color-text);
+}
+
+/* 上传图片缩略图：亮暗两套边框 */
+.editor-upload-thumb {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+:root.theme-dark .editor-upload-thumb {
+  border-color: var(--color-border);
 }
 
 /* 长 URL、连续英文、超长文本一律在框内折行，不横向溢出 */

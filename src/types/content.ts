@@ -1,3 +1,5 @@
+export type DocStatus = 'published' | 'draft'
+
 export interface KnowledgeDoc {
   id: string
   title: string
@@ -5,6 +7,10 @@ export interface KnowledgeDoc {
   content: string
   tags: string[]
   createTime: string
+  // 以下字段由新版后端接口返回；后端未部署前为 undefined，前台相应 UI 自动隐藏
+  views?: number
+  likes?: number
+  status?: DocStatus
 }
 
 export interface DocMutationPayload {
@@ -12,6 +18,7 @@ export interface DocMutationPayload {
   summary: string
   content: string
   tags: string[]
+  status?: DocStatus
 }
 
 export interface TocItem {

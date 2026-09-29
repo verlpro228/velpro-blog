@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -26,6 +26,7 @@ class DocMutationPayload(BaseModel):
     summary: str = ""
     content: str = ""
     tags: list[str] = []
+    status: Literal["published", "draft"] = "published"
 
 
 class ProfileUpdatePayload(BaseModel):

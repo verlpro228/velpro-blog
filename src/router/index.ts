@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { APP_NAME } from '@/constants/app'
+import { APP_NAME, SITE_DESCRIPTION } from '@/constants/app'
 import { useUserStore } from '@/store/modules/user'
 import { routes } from './routes'
 
@@ -16,6 +16,17 @@ router.beforeEach((to) => {
   const pageTitle = to.meta.title ? `${to.meta.title} | ${APP_NAME}` : APP_NAME
 
   document.title = pageTitle
+
+  const description = (to.meta.description as string | undefined) ?? SITE_DESCRIPTION
+  let metaDescription = document.querySelector<HTMLMetaElement>('meta[name="description"]')
+
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta')
+    metaDescription.name = 'description'
+    document.head.appendChild(metaDescription)
+  }
+
+  metaDescription.content = description
 
   if (to.meta.requiresAuth && !userStore.isAuthenticated) {
     return {

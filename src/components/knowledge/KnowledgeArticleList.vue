@@ -1,20 +1,32 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import AppEmptyState from '@/components/common/AppEmptyState.vue'
 import AppSkeletonLines from '@/components/common/AppSkeletonLines.vue'
 import type { KnowledgeDoc } from '@/types/content'
 
-defineProps<{
+const props = defineProps<{
   docs: KnowledgeDoc[]
   activeDocId: string
   loading: boolean
   keyword: string
   resultText: string
+  loadError?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:keyword': [value: string]
   select: [docId: string]
+  retry: []
 }>()
+
+// 全文预热后 content 有值；命中正文但标题/标签未必命中时给出提示
+// 忽略空格与大小写：正文常见"虚拟 DOM"这类中英文混排写法
+const normalizedKeyword = computed(() => props.keyword.trim().toLowerCase().replace(/\s+/g, ""))
+
+function isContentMatch(doc: KnowledgeDoc) {
+  const content = (doc.content ?? "").toLowerCase().replace(/\s+/g, "")
+  return Boolean(normalizedKeyword.value) && content.includes(normalizedKeyword.value)
+}
 </script>
 
 <template>
@@ -45,7 +57,7 @@ const emit = defineEmits<{
             :value="keyword"
             type="text"
             class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-            placeholder="按标题或标签搜索"
+            placeholder="搜索标题、标签或正文"
             @input="emit('update:keyword', ($event.target as HTMLInputElement).value)"
           />
           <button
@@ -107,7 +119,25 @@ const emit = defineEmits<{
               >
                 {{ tag }}
               </span>
+              <span
+                v-if="isContentMatch(doc)"
+                class="knowledge-list-chip knowledge-list-chip--match rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500"
+              >
+                正文匹配
+              </span>
             </div>
+          </button>
+        </div>
+
+        <div v-else-if="loadError" class="knowledge-error-box mt-6 rounded-2xl border px-4 py-6 text-center">
+          <p class="text-sm font-semibold">文档加载失败</p>
+          <p class="mt-1.5 text-xs leading-5 opacity-80">可能是网络波动或服务冷启动，稍等片刻再试。</p>
+          <button
+            type="button"
+            class="knowledge-error-retry mt-4 rounded-full border px-5 py-1.5 text-xs font-medium transition"
+            @click="emit('retry')"
+          >
+            重新加载
           </button>
         </div>
 

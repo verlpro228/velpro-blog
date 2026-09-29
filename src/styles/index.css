@@ -825,3 +825,323 @@ button {
 .el-skeleton__item {
   background: var(--color-surface-soft) !important;
 }
+
+/* ===== 知识库增强：代码块复制 / 图片灯箱 / 文章目录 / 底部导航 / 点赞 / 错误重试 ===== */
+
+/* 代码块：语言标签 + 复制按钮（代码主体为 atom-one-dark 深色，头部两种主题下统一深色） */
+.knowledge-page .code-block {
+  margin: 1.25em 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.knowledge-page .code-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 1rem;
+  background: #1c212e;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.knowledge-page .code-block-lang {
+  font-family: Consolas, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.knowledge-page .code-block-copy {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 2px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.knowledge-page .code-block-copy:hover {
+  color: #e2e8f0;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.knowledge-page .code-block-copy.is-copied {
+  color: #4ade80;
+}
+
+.knowledge-page .code-block pre {
+  margin: 0;
+  border-radius: 0;
+}
+
+/* 文章图片可点击放大 */
+.knowledge-page .knowledge-markdown img {
+  cursor: zoom-in;
+}
+
+/* 图片灯箱 */
+.knowledge-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: rgba(2, 6, 23, 0.82);
+  backdrop-filter: blur(10px) saturate(1.2);
+  cursor: zoom-out;
+}
+
+.knowledge-lightbox img {
+  max-width: 100%;
+  max-height: 92vh;
+  border-radius: 1rem;
+  box-shadow: 0 32px 80px rgba(2, 6, 23, 0.55);
+  cursor: default;
+}
+
+.knowledge-lightbox-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.knowledge-lightbox-close svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.knowledge-lightbox-close:hover {
+  background: rgba(51, 65, 85, 0.85);
+}
+
+.knowledge-lightbox-fade-enter-active,
+.knowledge-lightbox-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.knowledge-lightbox-fade-enter-from,
+.knowledge-lightbox-fade-leave-to {
+  opacity: 0;
+}
+
+/* 文章目录 */
+.knowledge-page .doc-toc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.knowledge-page .doc-toc-item {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 5px 10px;
+  border-radius: 8px;
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.knowledge-page .doc-toc-item--l3 {
+  padding-left: 22px;
+}
+
+.knowledge-page .doc-toc-item--l4 {
+  padding-left: 34px;
+  font-size: 12px;
+}
+
+.knowledge-page .doc-toc-item:hover {
+  color: var(--color-text-strong);
+  background: var(--color-surface-soft);
+}
+
+.knowledge-page .doc-toc-item.is-active {
+  color: var(--color-primary);
+  background: var(--color-surface-soft);
+  font-weight: 600;
+}
+
+.knowledge-page .doc-toc-aside {
+  border: 1px solid var(--color-border);
+  border-radius: 1.5rem;
+  background: var(--color-surface-strong);
+  padding: 1.1rem 1rem;
+  box-shadow: var(--shadow-panel);
+}
+
+.knowledge-page .doc-toc-heading {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-text-strong);
+}
+
+/* 底部导航（相关阅读 / 上一篇下一篇 / 评论）暗色适配 */
+:root.theme-dark .knowledge-page .doc-footer-nav {
+  border-color: var(--color-border);
+}
+
+:root.theme-dark .knowledge-page .doc-footer-title {
+  color: var(--color-text-strong);
+}
+
+:root.theme-dark .knowledge-page .doc-footer-card {
+  border-color: var(--color-border);
+  background: var(--color-surface-soft);
+}
+
+:root.theme-dark .knowledge-page .doc-footer-card:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--color-border-strong);
+}
+
+:root.theme-dark .knowledge-page .doc-footer-card-title {
+  color: var(--color-text-strong);
+}
+
+:root.theme-dark .knowledge-page .doc-footer-card-label {
+  color: var(--color-text-subtle);
+}
+
+:root.theme-dark .knowledge-page .doc-toc-inline {
+  border-color: var(--color-border);
+  background: var(--color-surface-soft);
+}
+
+:root.theme-dark .knowledge-page .doc-toc-inline > button {
+  color: var(--color-text-strong);
+}
+
+/* 点赞按钮 */
+.knowledge-page .knowledge-like-btn {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: transparent;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+}
+
+.knowledge-page .knowledge-like-btn:hover:not(:disabled) {
+  border-color: #f472b6;
+  color: #ec4899;
+  background: rgba(236, 72, 153, 0.08);
+}
+
+.knowledge-page .knowledge-like-btn.is-liked {
+  border-color: rgba(236, 72, 153, 0.4);
+  color: #ec4899;
+  background: rgba(236, 72, 153, 0.1);
+  cursor: default;
+}
+
+/* 侧栏加载失败重试 */
+.knowledge-page .knowledge-error-box {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(254, 243, 199, 0.55);
+  color: #92400e;
+}
+
+.knowledge-page .knowledge-error-retry {
+  border-color: rgba(251, 191, 36, 0.55);
+  background: #ffffff;
+  color: #92400e;
+  cursor: pointer;
+}
+
+.knowledge-page .knowledge-error-retry:hover {
+  background: #fef3c7;
+}
+
+:root.theme-dark .knowledge-page .knowledge-error-box {
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(120, 53, 15, 0.28);
+  color: #fcd34d;
+}
+
+:root.theme-dark .knowledge-page .knowledge-error-retry {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fcd34d;
+}
+
+:root.theme-dark .knowledge-page .knowledge-error-retry:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ===== 归档页 + 正文匹配标记 ===== */
+
+:root.theme-dark .archive-page .archive-hero,
+:root.theme-dark .archive-page .archive-year-card {
+  border-color: var(--color-border) !important;
+  background: var(--color-surface-strong) !important;
+  box-shadow: var(--shadow-panel);
+}
+
+:root.theme-dark .archive-page .archive-hero-title,
+:root.theme-dark .archive-page .archive-year {
+  color: var(--color-text-strong);
+}
+
+:root.theme-dark .archive-page .archive-hero-copy {
+  color: var(--color-text-muted);
+}
+
+:root.theme-dark .archive-page .archive-year-count,
+:root.theme-dark .archive-page .archive-item-tag {
+  border-color: var(--color-border);
+  background: var(--color-surface-soft);
+  color: var(--color-text-subtle);
+}
+
+:root.theme-dark .archive-page .archive-item:hover {
+  background: var(--color-surface-soft);
+}
+
+:root.theme-dark .archive-page .archive-item-title {
+  color: var(--color-text-strong);
+}
+
+:root.theme-dark .archive-page .archive-item-date {
+  color: var(--color-text-subtle);
+}
+
+:root.theme-dark .app-footer-rss {
+  color: var(--color-text-subtle);
+}
+
+.knowledge-page .knowledge-list-chip--match {
+  border-color: rgba(34, 211, 238, 0.35);
+  background: rgba(8, 145, 178, 0.08);
+  color: #0e7490;
+}
+
+:root.theme-dark .knowledge-page .knowledge-list-chip--match {
+  border-color: rgba(34, 211, 238, 0.3);
+  background: rgba(34, 211, 238, 0.1);
+  color: #67e8f9;
+}

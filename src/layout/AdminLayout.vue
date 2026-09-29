@@ -38,8 +38,9 @@ const syncLabel = computed(() => {
 
 <template>
   <div class="app-shell">
-    <div class="grid min-h-screen lg:grid-cols-[260px_1fr]">
-      <aside class="app-panel-strong border-b p-4 sm:p-6 lg:border-b-0 lg:border-r">
+    <!-- lg 起：整体锁定一屏高，左栏与主内容各自独立滚动，左栏不再随内容上下滑动 -->
+    <div class="grid min-h-screen lg:h-screen lg:grid-cols-[260px_1fr] lg:overflow-hidden">
+      <aside class="app-panel-strong border-b p-4 sm:p-6 lg:h-screen lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <button class="mb-8 text-left sm:mb-10" @click="router.push('/')">
           <p class="app-overline text-xs uppercase tracking-[0.32em]">后台控制台</p>
           <h2 class="app-heading mt-2 text-xl font-semibold sm:text-2xl">内容管理工作台</h2>
@@ -69,7 +70,7 @@ const syncLabel = computed(() => {
         </div>
       </aside>
 
-      <main class="overflow-hidden">
+      <main class="overflow-hidden lg:h-screen lg:overflow-y-auto">
         <header class="app-panel border-b px-4 py-4 backdrop-blur sm:px-8 sm:py-5">
           <p class="app-overline text-xs uppercase tracking-[0.28em]">工作区</p>
           <div class="mt-2 flex flex-wrap items-center justify-between gap-4">

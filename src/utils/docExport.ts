@@ -72,6 +72,10 @@ const PDF_CONTAINER_STYLE = `
   #${PDF_EXPORT_ID} .doc-summary { margin: 0 0 28px; font-size: 14px; color: #475569; }
   #${PDF_EXPORT_ID} .doc-divider { margin: 0 0 32px; border: 0; border-top: 1px solid #e2e8f0; }
   #${PDF_EXPORT_ID} .doc-content { overflow-wrap: break-word; }
+  /* 知识库页代码块自带"语言 + 复制"头部，PDF 里只保留代码本体 */
+  #${PDF_EXPORT_ID} .doc-content .code-block-head { display: none; }
+  #${PDF_EXPORT_ID} .doc-content .code-block { margin: 0 0 14px; }
+  #${PDF_EXPORT_ID} .doc-content .code-block pre { margin: 0; }
   #${PDF_EXPORT_ID} .doc-content h1, #${PDF_EXPORT_ID} .doc-content h2, #${PDF_EXPORT_ID} .doc-content h3 { line-height: 1.4; margin: 28px 0 12px; }
   #${PDF_EXPORT_ID} .doc-content p { margin: 0 0 14px; }
   #${PDF_EXPORT_ID} .doc-content pre {

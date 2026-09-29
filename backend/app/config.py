@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # Aiven CA 证书路径（相对项目根或绝对路径），留空则跳过证书验证
     db_ssl_ca_path: str = "backend/certs/ca.pem"
 
+    # 站点对外地址（RSS 等订阅内容的链接前缀）
+    site_url: str = "https://www.velpro.xyz"
+
     jwt_secret: str = "please-change-me"
     jwt_expire_hours: int = 24 * 7
 

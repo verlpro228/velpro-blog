@@ -1,6 +1,7 @@
 import type { TocItem } from '@/types/content'
 
-const headingPattern = /<h([2-4])>(.*?)<\/h\1>/g
+// 兼容带属性的标题标签（injectHeadingIds 注入 id 后形如 <h3 id="...">）
+const headingPattern = /<h([2-4])[^>]*>(.*?)<\/h\1>/g
 
 export function createHeadingSlug(text: string) {
   return text

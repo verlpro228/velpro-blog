@@ -28,7 +28,8 @@ export function useKnowledgeSearch(
   const engine = computed(
     () =>
       new Fuse(source.value, {
-        keys: ['title', 'tags'],
+        // content 由 store 空闲时渐进预热（warmContentCache），加载一篇自动重索引
+        keys: ['title', 'tags', 'content'],
         threshold: 0.3,
         ignoreLocation: true,
       }),
