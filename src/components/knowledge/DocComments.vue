@@ -5,6 +5,8 @@ import { useTheme } from '@/hooks/useTheme'
 
 const props = defineProps<{
   docId: string
+  // 自定义讨论串标识（如留言板 "guestbook"）；不传则按文档粒度生成 term = doc:{docId}
+  term?: string
 }>()
 
 const { isDark } = useTheme()
@@ -37,14 +39,15 @@ function loadWidget() {
   script.async = true
   script.crossOrigin = 'anonymous'
 
+  const term = props.term ?? `${GISCUS_CONFIG.termPrefix}${props.docId}`
   const params: Record<string, string> = {
     'data-repo': GISCUS_CONFIG.repo,
     'data-repo-id': GISCUS_CONFIG.repoId,
     'data-category': GISCUS_CONFIG.category,
     'data-category-id': GISCUS_CONFIG.categoryId,
-    // Hash 路由下 pathname 恒为 /，用 specific + 文档 id 保证每篇一个独立讨论串
+    // Hash 路由下 pathname 恒为 /，用 specific + term 保证每篇/每页一个独立讨论串
     'data-mapping': 'specific',
-    'data-term': `${GISCUS_CONFIG.termPrefix}${props.docId}`,
+    'data-term': term,
     'data-strict': '0',
     'data-reactions-enabled': '1',
     'data-emit-metadata': '0',

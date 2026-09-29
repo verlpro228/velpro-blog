@@ -38,7 +38,7 @@ router.beforeEach((to) => {
   }
 
   if (to.path === '/login' && userStore.isAuthenticated) {
-    return '/admin/editor'
+    return '/admin/dashboard'
   }
 
   return true

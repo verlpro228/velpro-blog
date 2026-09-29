@@ -9,10 +9,12 @@ import DocFooterNav from '@/components/knowledge/DocFooterNav.vue'
 import DocToc from '@/components/knowledge/DocToc.vue'
 import KnowledgeArticleList from '@/components/knowledge/KnowledgeArticleList.vue'
 import KnowledgeLightbox from '@/components/knowledge/KnowledgeLightbox.vue'
+import KnowledgeReadingCard from '@/components/knowledge/KnowledgeReadingCard.vue'
 import { useAsyncMarkdown } from '@/hooks/useAsyncMarkdown'
 import { useKnowledgeSearch } from '@/hooks/useKnowledgeSearch'
 import { useReadingProgress } from '@/hooks/useReadingProgress'
 import { useDocsStore } from '@/store/modules/docs'
+import { useReadingStore } from '@/store/modules/reading'
 import { showToast } from '@/utils/toast'
 import { extractToc } from '@/utils/markdown'
 import { estimateReadingMinutes } from '@/utils/readingTime'
@@ -24,6 +26,7 @@ import {
 } from '@/utils/docExport'
 
 const docsStore = useDocsStore()
+const readingStore = useReadingStore()
 const articleContainerRef = ref<HTMLElement | null>(null)
 
 const exportWrapperRef = ref<HTMLElement | null>(null)
@@ -207,6 +210,24 @@ function handleArticleClick(event: MouseEvent) {
 
 const isLiked = computed(() => (currentDoc.value ? docsStore.isDocLiked(currentDoc.value.id) : false))
 
+const isStarred = computed(() => (currentDoc.value ? readingStore.isStarred(currentDoc.value.id) : false))
+
+function handleStar() {
+  const doc = currentDoc.value
+
+  if (!doc) {
+    return
+  }
+
+  const starred = readingStore.toggleStar(doc)
+  showToast(starred ? '已加入收藏' : '已取消收藏', { type: 'success' })
+}
+
+// 标签可点击筛选：填入搜索关键词即触发 Fuse 过滤
+function applyTagFilter(tag: string) {
+  keyword.value = tag
+}
+
 async function handleLike() {
   const doc = currentDoc.value
 
@@ -251,6 +272,10 @@ watch(
   (docId) => {
     if (!docId) {
       return
+    }
+
+    if (currentDoc.value) {
+      readingStore.recordRead(currentDoc.value)
     }
 
     isTocOpen.value = false
@@ -324,18 +349,22 @@ onBeforeUnmount(() => {
       </section>
 
       <section class="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-6">
-        <div class="xl:sticky xl:top-24 xl:w-72 xl:flex-none xl:self-start">
-          <KnowledgeArticleList
-            :docs="visibleDocs"
-            :active-doc-id="docsStore.activeDocId"
-            :loading="docsStore.loading"
-            :keyword="keyword"
-            :result-text="resultText"
-            :load-error="docsStore.loadError"
-            @update:keyword="keyword = $event"
-            @select="docsStore.setActiveDoc"
-            @retry="docsStore.refreshDocs()"
-          />
+        <div class="xl:sticky xl:top-24 xl:flex xl:w-72 xl:flex-none xl:flex-col xl:self-start xl:h-[calc(100vh-7rem)]">
+          <div class="xl:min-h-0 xl:flex-1">
+            <KnowledgeArticleList
+              :docs="visibleDocs"
+              :active-doc-id="docsStore.activeDocId"
+              :loading="docsStore.loading"
+              :keyword="keyword"
+              :result-text="resultText"
+              :load-error="docsStore.loadError"
+              @update:keyword="keyword = $event"
+              @select="docsStore.setActiveDoc"
+              @retry="docsStore.refreshDocs()"
+            />
+          </div>
+
+          <KnowledgeReadingCard class="mt-4 flex-none" @select="docsStore.setActiveDoc" />
         </div>
 
         <div class="min-w-0 flex-1">
@@ -375,6 +404,19 @@ onBeforeUnmount(() => {
                         <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
                       </svg>
                       <span>{{ currentDoc.likes }}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      class="knowledge-star-btn inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition"
+                      :class="{ 'is-starred': isStarred }"
+                      :title="isStarred ? '取消收藏' : '收藏本文'"
+                      @click="handleStar"
+                    >
+                      <svg viewBox="0 0 24 24" :fill="isStarred ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                      <span>{{ isStarred ? '已收藏' : '收藏' }}</span>
                     </button>
                   </div>
 
@@ -434,13 +476,16 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="mt-4 flex flex-wrap gap-2">
-                  <span
+                  <button
                     v-for="tag in currentDoc.tags"
                     :key="tag"
-                    class="knowledge-content-tag rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500"
+                    type="button"
+                    class="knowledge-content-tag knowledge-content-tag--clickable rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500"
+                    :title="`筛选「${tag}」相关文档`"
+                    @click="applyTagFilter(tag)"
                   >
                     {{ tag }}
-                  </span>
+                  </button>
                 </div>
 
                 <h2 class="knowledge-content-title mt-5 text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl">

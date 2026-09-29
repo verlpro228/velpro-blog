@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from .config import get_settings
 from .database import Base, SessionLocal, engine
 from .models import User
-from .routers import ai, auth, docs, profile, projects, rss
+from .routers import ai, auth, docs, profile, projects, rss, stats
 from .security import hash_password
 
 
@@ -86,6 +86,7 @@ app.include_router(docs.router, prefix="/api/docs", tags=["docs"])
 app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
+app.include_router(stats.router, prefix="/api/stats", tags=["stats"])
 app.include_router(rss.router, prefix="/api", tags=["rss"])
 
 

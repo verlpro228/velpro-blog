@@ -32,9 +32,11 @@ export const NAVIGATION_ITEMS = [
   { label: '归档', path: '/archive' },
   { label: '项目展示', path: '/projects' },
   { label: '个人介绍', path: '/about' },
+  { label: '留言板', path: '/guestbook' },
 ] as const
 
 export const ADMIN_NAVIGATION_ITEMS = [
+  { label: '数据看板', path: '/admin/dashboard' },
   { label: '文档管理', path: '/admin/editor' },
   { label: '项目管理', path: '/admin/projects' },
   { label: '介绍管理', path: '/admin/profile' },

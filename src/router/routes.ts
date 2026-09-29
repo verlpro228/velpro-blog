@@ -36,6 +36,24 @@ export const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'guestbook',
+        name: 'guestbook',
+        component: () => import('@/views/GuestbookView.vue'),
+        meta: {
+          title: '留言板',
+          description: '访客留言板：对站点、文章与项目的任何想法，欢迎在这里留下你的声音。',
+        },
+      },
+      {
+        path: 'links',
+        name: 'links',
+        component: () => import('@/views/LinksView.vue'),
+        meta: {
+          title: '友情链接',
+          description: '友情链接与申请方式：收录朋友们的技术博客与站点。',
+        },
+      },
+      {
         path: 'projects',
         name: 'projects',
         component: () => import('@/views/ProjectsView.vue'),
@@ -73,6 +91,15 @@ export const routes: RouteRecordRaw[] = [
       layout: 'admin',
     },
     children: [
+      {
+        path: 'dashboard',
+        name: 'dashboard',
+        component: () => import('@/views/admin/DashboardView.vue'),
+        meta: {
+          title: '数据看板',
+          requiresAuth: true,
+        },
+      },
       {
         path: 'editor',
         name: 'editor',

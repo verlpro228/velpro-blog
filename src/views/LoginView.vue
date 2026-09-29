@@ -26,7 +26,7 @@ const rules: FormRules<LoginFormState> = {
 }
 
 const redirectTarget = computed(() =>
-  typeof route.query.redirect === 'string' ? route.query.redirect : '/admin/editor',
+  typeof route.query.redirect === 'string' ? route.query.redirect : '/admin/dashboard',
 )
 
 const handleSubmit = async () => {

@@ -19,6 +19,11 @@ const emit = defineEmits<{
   retry: []
 }>()
 
+// 标签可点击筛选：阻断冒泡，避免触发卡片本身的"选中文档"
+function handleTagClick(tag: string) {
+  emit('update:keyword', tag)
+}
+
 // 全文预热后 content 有值；命中正文但标题/标签未必命中时给出提示
 // 忽略空格与大小写：正文常见"虚拟 DOM"这类中英文混排写法
 const normalizedKeyword = computed(() => props.keyword.trim().toLowerCase().replace(/\s+/g, ""))
@@ -30,9 +35,9 @@ function isContentMatch(doc: KnowledgeDoc) {
 </script>
 
 <template>
-  <aside class="xl:h-[calc(100vh-7rem)]">
+  <aside class="xl:h-full">
     <div
-      class="knowledge-sidebar-card rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:flex xl:h-[calc(100vh-7rem)] xl:min-h-0 xl:flex-col"
+      class="knowledge-sidebar-card rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:flex xl:h-full xl:min-h-0 xl:flex-col"
     >
       <div class="flex items-start justify-between gap-4">
         <div>
@@ -112,13 +117,16 @@ function isContentMatch(doc: KnowledgeDoc) {
             </p>
 
             <div class="mt-3 flex flex-wrap gap-2">
-              <span
+              <button
                 v-for="tag in doc.tags"
                 :key="tag"
-                class="knowledge-list-chip rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500"
+                type="button"
+                class="knowledge-list-chip knowledge-list-chip--clickable rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500"
+                :title="`筛选「${tag}」相关文档`"
+                @click.stop="handleTagClick(tag)"
               >
                 {{ tag }}
-              </span>
+              </button>
               <span
                 v-if="isContentMatch(doc)"
                 class="knowledge-list-chip knowledge-list-chip--match rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500"

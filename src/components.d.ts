@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppAiAssistant: typeof import('./components/common/AppAiAssistant.vue')['default']
+    AppCommandPalette: typeof import('./components/common/AppCommandPalette.vue')['default']
     AppDrawer: typeof import('./components/common/AppDrawer.vue')['default']
     AppEmptyState: typeof import('./components/common/AppEmptyState.vue')['default']
     AppFooter: typeof import('./components/common/AppFooter.vue')['default']
@@ -33,6 +34,7 @@ declare module 'vue' {
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElSelect: typeof import('element-plus/es')['ElSelect']
     ElSkeleton: typeof import('element-plus/es')['ElSkeleton']
+    ElSkeletonItem: typeof import('element-plus/es')['ElSkeletonItem']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
@@ -44,11 +46,13 @@ declare module 'vue' {
     KnowledgeArticleList: typeof import('./components/knowledge/KnowledgeArticleList.vue')['default']
     KnowledgeCategoryMenu: typeof import('./components/knowledge/KnowledgeCategoryMenu.vue')['default']
     KnowledgeLightbox: typeof import('./components/knowledge/KnowledgeLightbox.vue')['default']
+    KnowledgeReadingCard: typeof import('./components/knowledge/KnowledgeReadingCard.vue')['default']
     KnowledgeTocNav: typeof import('./components/knowledge/KnowledgeTocNav.vue')['default']
     ProgressBar: typeof import('./components/common/ProgressBar.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SectionTitle: typeof import('./components/common/SectionTitle.vue')['default']
+    StatChartCard: typeof import('./components/admin/StatChartCard.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

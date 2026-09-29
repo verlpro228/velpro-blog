@@ -27,6 +27,25 @@ const yearGroups = computed(() => {
     .map(([year, docs]) => ({ year, docs }))
 })
 
+const tagCloud = computed(() => {
+  const counter = new Map<string, number>()
+
+  for (const doc of docsStore.docs) {
+    for (const tag of doc.tags) {
+      counter.set(tag, (counter.get(tag) ?? 0) + 1)
+    }
+  }
+
+  return [...counter.entries()]
+    .sort((left, right) => right[1] - left[1])
+    .map(([name, count]) => ({ name, count }))
+})
+
+function openTag(tag: string) {
+  docsStore.setKeyword(tag)
+  router.push('/knowledge')
+}
+
 onMounted(() => {
   if (!docsStore.docs.length) {
     void docsStore.fetchDocs()
@@ -52,6 +71,25 @@ function openDoc(docId: string) {
         <p class="archive-hero-copy mt-4 text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
           按年份回看全部已发布文档，共 {{ docsStore.docs.length }} 篇。点击任意一篇即可进入知识库阅读。
         </p>
+      </section>
+
+      <section
+        v-if="tagCloud.length"
+        class="archive-tag-cloud mb-6 rounded-[1.75rem] border border-slate-200 bg-white px-4 py-6 shadow-sm sm:px-8 sm:py-6"
+      >
+        <p class="archive-cloud-title text-sm font-semibold text-slate-900">按标签浏览</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="tag in tagCloud"
+            :key="tag.name"
+            type="button"
+            class="archive-cloud-tag rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs text-slate-600 transition hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-900"
+            @click="openTag(tag.name)"
+          >
+            {{ tag.name }}
+            <span class="archive-cloud-count ml-1 text-[10px] tabular-nums">{{ tag.count }}</span>
+          </button>
+        </div>
       </section>
 
       <div v-if="docsStore.loading && !docsStore.docs.length" class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">

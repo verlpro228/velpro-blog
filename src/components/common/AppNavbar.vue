@@ -95,7 +95,7 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
             v-if="!isAdminRoute"
             class="app-button-secondary hidden h-10 border-0 px-4 text-sm shadow-md hover:shadow-lg sm:inline-flex lg:h-11 lg:px-5"
             type="button"
-            @click="router.push('/admin/editor')"
+            @click="router.push('/admin/dashboard')"
           >
             进入后台
           </button>
@@ -129,7 +129,7 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
             v-if="!isAdminRoute"
             type="button"
             class="app-route-pill shrink-0 rounded-full px-4 py-2 text-sm font-medium"
-            @click="router.push('/admin/editor')"
+            @click="router.push('/admin/dashboard')"
           >
             后台
           </button>

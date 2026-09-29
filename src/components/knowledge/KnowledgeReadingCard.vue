@@ -1,0 +1,82 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { useReadingStore } from '@/store/modules/reading'
+import { useDocsStore } from '@/store/modules/docs'
+
+const emit = defineEmits<{
+  select: [docId: string]
+}>()
+
+const readingStore = useReadingStore()
+const docsStore = useDocsStore()
+
+const activeTab = ref<'history' | 'starred'>('history')
+
+const items = computed(() => {
+  if (activeTab.value === 'starred') {
+    return readingStore.starredIds
+      .map((id) => {
+        const doc = docsStore.docs.find((item) => item.id === id)
+        return doc ? { id, title: doc.title, readAt: 0 } : null
+      })
+      .filter((item): item is { id: string; title: string; readAt: number } => item !== null)
+  }
+
+  return readingStore.history.filter((item) => docsStore.docs.some((doc) => doc.id === item.id))
+})
+
+function formatTime(timestamp: number) {
+  const date = new Date(timestamp)
+  return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+</script>
+
+<template>
+  <div class="knowledge-reading-card rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-1">
+        <button
+          type="button"
+          class="knowledge-reading-tab rounded-full px-3 py-1 text-xs font-medium transition"
+          :class="activeTab === 'history' ? 'is-active' : ''"
+          @click="activeTab = 'history'"
+        >
+          最近阅读
+        </button>
+        <button
+          type="button"
+          class="knowledge-reading-tab rounded-full px-3 py-1 text-xs font-medium transition"
+          :class="activeTab === 'starred' ? 'is-active' : ''"
+          @click="activeTab = 'starred'"
+        >
+          我的收藏
+        </button>
+      </div>
+      <span class="knowledge-sidebar-count inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500">
+        {{ items.length }}
+      </span>
+    </div>
+
+    <div class="knowledge-reading-list mt-3 max-h-44 space-y-1 overflow-y-auto">
+      <button
+        v-for="item in items"
+        :key="item.id"
+        type="button"
+        class="knowledge-reading-item flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition"
+        @click="emit('select', item.id)"
+      >
+        <span class="min-w-0 flex-1 truncate text-xs font-medium text-slate-700">{{ item.title }}</span>
+        <span v-if="activeTab === 'history'" class="flex-none text-[10px] tabular-nums text-slate-400">
+          {{ formatTime(item.readAt) }}
+        </span>
+        <svg v-else class="h-3 w-3 flex-none text-amber-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      </button>
+
+      <p v-if="!items.length" class="px-2.5 py-3 text-center text-xs leading-5 text-slate-400">
+        {{ activeTab === 'history' ? '读过的文章会出现在这里' : '在文章顶部点击星标即可收藏' }}
+      </p>
+    </div>
+  </div>
+</template>

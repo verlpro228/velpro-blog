@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppAiAssistant from '@/components/common/AppAiAssistant.vue'
+import AppCommandPalette from '@/components/common/AppCommandPalette.vue'
 import AppFooter from '@/components/common/AppFooter.vue'
 import AppNavbar from '@/components/common/AppNavbar.vue'
 </script>
@@ -16,5 +17,6 @@ import AppNavbar from '@/components/common/AppNavbar.vue'
     </main>
     <AppFooter />
     <AppAiAssistant />
+    <AppCommandPalette />
   </div>
 </template>
