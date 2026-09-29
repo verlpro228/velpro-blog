@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     database_url: str = "mysql+pymysql://root:root@127.0.0.1:3306/velpro_blog"
     # Aiven CA 证书路径（相对项目根或绝对路径），留空则跳过证书验证
     db_ssl_ca_path: str = "backend/certs/ca.pem"
+
+    # 环境变量/secret 粘贴时常带行尾换行，导致 "Incorrect database name 'xxx\n'"
+    @field_validator("database_url", "db_ssl_ca_path", mode="after")
+    @classmethod
+    def strip_env_value(cls, value: str) -> str:
+        return value.strip()
 
     # 站点对外地址（RSS 等订阅内容的链接前缀）
     site_url: str = "https://www.velpro.xyz"
