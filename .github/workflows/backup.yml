@@ -19,15 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 检出仓库
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 安装 Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: 安装依赖
-        run: pip install "sqlalchemy>=2.0,<3" "pymysql>=1.1,<2" "cryptography>=43"
+        # backup_db.py 复用 backend.app.database/config，需同时安装 pydantic 系列
+        run: pip install "sqlalchemy>=2.0,<3" "pymysql>=1.1,<2" "cryptography>=43" "pydantic>=2.7,<3" "pydantic-settings>=2.4" "python-dotenv>=1.0"
 
       - name: 导出数据库内容
         env:
