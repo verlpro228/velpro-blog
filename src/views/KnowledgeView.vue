@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onClickOutside } from '@vueuse/core'
 import AppEmptyState from '@/components/common/AppEmptyState.vue'
 import AppSkeletonLines from '@/components/common/AppSkeletonLines.vue'
 import ProgressBar from '@/components/common/ProgressBar.vue'
@@ -8,9 +9,63 @@ import { useAsyncMarkdown } from '@/hooks/useAsyncMarkdown'
 import { useKnowledgeSearch } from '@/hooks/useKnowledgeSearch'
 import { useReadingProgress } from '@/hooks/useReadingProgress'
 import { useDocsStore } from '@/store/modules/docs'
+import { showToast } from '@/utils/toast'
+import {
+  exportDocAsJson,
+  exportDocAsMarkdown,
+  exportDocAsPdf,
+  type DocExportFormat,
+} from '@/utils/docExport'
 
 const docsStore = useDocsStore()
 const articleContainerRef = ref<HTMLElement | null>(null)
+
+const exportWrapperRef = ref<HTMLElement | null>(null)
+const isExportOpen = ref(false)
+
+const exportOptions: Array<{ format: DocExportFormat; label: string; extension: string }> = [
+  { format: 'markdown', label: 'Markdown 文档', extension: '.md' },
+  { format: 'pdf', label: 'PDF 文档', extension: '.pdf' },
+  { format: 'json', label: 'JSON 数据', extension: '.json' },
+]
+
+onClickOutside(exportWrapperRef, () => {
+  isExportOpen.value = false
+})
+
+function toggleExportMenu() {
+  isExportOpen.value = !isExportOpen.value
+}
+
+async function handleExport(format: DocExportFormat) {
+  isExportOpen.value = false
+
+  const doc = currentDoc.value
+
+  if (!doc) {
+    return
+  }
+
+  if (format === 'markdown') {
+    exportDocAsMarkdown(doc)
+    showToast(`已导出 Markdown：${doc.title}.md`, { type: 'success' })
+    return
+  }
+
+  if (format === 'json') {
+    exportDocAsJson(doc)
+    showToast(`已导出 JSON：${doc.title}.json`, { type: 'success' })
+    return
+  }
+
+  try {
+    await exportDocAsPdf(doc, renderedContent.value)
+    showToast(`已导出 PDF：${doc.title}.pdf`, { type: 'success' })
+  }
+  catch {
+    showToast('PDF 导出失败，请重试', { type: 'error' })
+  }
+}
 
 const visibleSource = computed(() => docsStore.docs)
 const currentDoc = computed(() => docsStore.currentDoc)
@@ -161,10 +216,66 @@ onBeforeUnmount(() => {
           >
             <template v-if="currentDoc">
               <header class="knowledge-content-header mb-8 border-b border-slate-200 pb-6 sm:mb-10 sm:pb-8">
-                <div class="knowledge-content-meta flex flex-wrap items-center gap-3 text-sm text-slate-500">
-                  <span>{{ currentDoc.createTime }}</span>
-                  <span class="knowledge-content-separator text-slate-300">•</span>
-                  <span>{{ currentDoc.tags.length }} 个标签</span>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="knowledge-content-meta flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                    <span>{{ currentDoc.createTime }}</span>
+                    <span class="knowledge-content-separator text-slate-300">•</span>
+                    <span>{{ currentDoc.tags.length }} 个标签</span>
+                  </div>
+
+                  <div ref="exportWrapperRef" class="relative">
+                    <button
+                      type="button"
+                      class="knowledge-export-trigger inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-white hover:text-slate-900"
+                      :aria-expanded="isExportOpen"
+                      aria-haspopup="menu"
+                      @click="toggleExportMenu"
+                    >
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      <span>导出</span>
+                      <svg
+                        class="h-3 w-3 transition-transform"
+                        :class="isExportOpen ? 'rotate-180' : ''"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+
+                    <Transition name="knowledge-export-fade">
+                      <div
+                        v-if="isExportOpen"
+                        class="knowledge-export-menu absolute right-0 top-full z-20 mt-2 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1.5 shadow-lg shadow-slate-200/60"
+                        role="menu"
+                      >
+                        <button
+                          v-for="option in exportOptions"
+                          :key="option.format"
+                          type="button"
+                          class="knowledge-export-item flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                          role="menuitem"
+                          @click="handleExport(option.format)"
+                        >
+                          <svg class="h-3.5 w-3.5 flex-none text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          <span>{{ option.label }}</span>
+                          <span class="knowledge-export-item-ext ml-auto text-[10px] uppercase tracking-wide text-slate-400">{{ option.extension }}</span>
+                        </button>
+                      </div>
+                    </Transition>
+                  </div>
                 </div>
 
                 <div class="mt-4 flex flex-wrap gap-2">
