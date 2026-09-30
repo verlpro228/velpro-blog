@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useDebounceFn, onClickOutside } from '@vueuse/core'
 import AppEmptyState from '@/components/common/AppEmptyState.vue'
 import AppSkeletonLines from '@/components/common/AppSkeletonLines.vue'
@@ -16,7 +17,9 @@ import { useReadingProgress } from '@/hooks/useReadingProgress'
 import { useDocsStore } from '@/store/modules/docs'
 import { useReadingStore } from '@/store/modules/reading'
 import { useAiSummary } from '@/hooks/useAiSummary'
+import { APP_NAME, SITE_DESCRIPTION } from '@/constants/app'
 import { showToast } from '@/utils/toast'
+import { setMeta } from '@/utils/meta'
 import { extractToc } from '@/utils/markdown'
 import { estimateReadingMinutes } from '@/utils/readingTime'
 import {
@@ -28,7 +31,65 @@ import {
 
 const docsStore = useDocsStore()
 const readingStore = useReadingStore()
+const route = useRoute()
+const router = useRouter()
 const articleContainerRef = ref<HTMLElement | null>(null)
+
+// ===== 文章独立 URL（/knowledge/:id）与 store 双向同步 =====
+function readRouteDocId() {
+  const id = route.params.id
+  return typeof id === 'string' ? id : ''
+}
+
+// URL → store：直接访问 /knowledge/doc-xxx（分享链接、刷新、前进后退）时激活对应文章
+watch(
+  () => route.params.id,
+  () => {
+    const docId = readRouteDocId()
+
+    if (docId && docId !== docsStore.activeDocId) {
+      docsStore.setActiveDoc(docId)
+    }
+  },
+  { immediate: true },
+)
+
+// store → URL：文章确定后补全地址栏，保证任何时刻链接都可分享。
+// 用 replace 避免自动补全污染浏览器前进/后退历史。
+// immediate 是必须的：activeDocId 被 pinia 持久化，刷新后它没有「变化」，
+// 不加 immediate 时访问 /knowledge 不会把文章 id 补进地址栏。
+watch(
+  () => docsStore.activeDocId,
+  (docId) => {
+    if (route.name !== 'knowledge') {
+      return
+    }
+
+    if (!docId) {
+      // 搜索无结果等场景：清掉 URL 上的文章 id
+      if (readRouteDocId()) {
+        void router.replace({ name: 'knowledge' })
+      }
+      return
+    }
+
+    if (readRouteDocId() === docId) {
+      return
+    }
+
+    void router.replace({ name: 'knowledge', params: { id: docId } })
+  },
+  { immediate: true },
+)
+
+// 显式点击文章走 push，保留浏览器前进/后退能力
+function selectDoc(docId: string) {
+  if (!docId || readRouteDocId() === docId) {
+    return
+  }
+
+  void router.push({ name: 'knowledge', params: { id: docId } })
+}
 
 const exportWrapperRef = ref<HTMLElement | null>(null)
 const isExportOpen = ref(false)
@@ -80,6 +141,20 @@ async function handleExport(format: DocExportFormat) {
 const visibleSource = computed(() => docsStore.docs)
 const currentDoc = computed(() => docsStore.currentDoc)
 const markdownSource = computed(() => currentDoc.value?.content ?? '')
+
+// 单篇文章页用文章标题与摘要覆盖站点级 meta，提升收录质量（后台/登录页由路由守卫设 noindex）
+watch(
+  currentDoc,
+  (doc) => {
+    if (!doc || route.name !== 'knowledge') {
+      return
+    }
+
+    document.title = `${doc.title} | ${APP_NAME}`
+    setMeta('description', doc.summary || SITE_DESCRIPTION)
+  },
+  { immediate: true },
+)
 
 const syncLabel = computed(() => {
   if (!docsStore.lastFetchedAt) {
@@ -428,12 +503,12 @@ onBeforeUnmount(() => {
               :result-text="resultText"
               :load-error="docsStore.loadError"
               @update:keyword="keyword = $event"
-              @select="docsStore.setActiveDoc"
+              @select="selectDoc"
               @retry="docsStore.refreshDocs()"
             />
           </div>
 
-          <KnowledgeReadingCard class="mt-4 flex-none" @select="docsStore.setActiveDoc" />
+          <KnowledgeReadingCard class="mt-4 flex-none" @select="selectDoc" />
         </div>
 
         <div class="min-w-0 flex-1">
@@ -681,7 +756,7 @@ onBeforeUnmount(() => {
                 :prev-doc="prevDoc"
                 :next-doc="nextDoc"
                 :related-docs="relatedDocs"
-                @select="docsStore.setActiveDoc"
+                @select="selectDoc"
               />
 
               <DocComments :key="currentDoc.id" :doc-id="currentDoc.id" />

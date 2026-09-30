@@ -18,11 +18,14 @@ export const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'knowledge',
+        // :id 可选：/knowledge 为知识库首页，/knowledge/doc-xxx 为单篇文章（独立 URL，便于收录与分享）
+        path: 'knowledge/:id?',
         name: 'knowledge',
         component: () => import('@/views/KnowledgeView.vue'),
         meta: {
           title: '知识库',
+          // 导航高亮用的路径：带 :id 时 route.path 会变长，不能用它直接比对
+          navPath: '/knowledge',
           description: '前端技术知识库：React、Vue、CSS、JavaScript、网络与工程化等核心知识点系统梳理，支持模糊检索、AI 答疑与多格式导出。',
         },
       },
@@ -80,6 +83,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       title: '登录',
       layout: 'blank',
+      noindex: true,
     },
   },
   {
@@ -89,6 +93,8 @@ export const routes: RouteRecordRaw[] = [
       title: '后台管理',
       requiresAuth: true,
       layout: 'admin',
+      // 子路由通过 meta 合并继承，后台全部页面都不进搜索引擎索引
+      noindex: true,
     },
     children: [
       {

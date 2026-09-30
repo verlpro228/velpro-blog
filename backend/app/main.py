@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from .config import get_settings
 from .database import Base, SessionLocal, engine
 from .models import User
-from .routers import ai, auth, docs, profile, projects, rss, stats
+from .routers import ai, auth, docs, profile, projects, rss, sitemap, stats
 from .security import hash_password
 
 logger = logging.getLogger("velpro")
@@ -115,6 +115,8 @@ app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 app.include_router(stats.router, prefix="/api/stats", tags=["stats"])
 app.include_router(rss.router, prefix="/api", tags=["rss"])
+# 根级路径（非 /api），需 vercel.json 单独放行，见 routers/sitemap.py
+app.include_router(sitemap.router, tags=["seo"])
 
 
 @app.get("/api/health")

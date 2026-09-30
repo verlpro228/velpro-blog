@@ -51,8 +51,9 @@ Velpro Blog 是一个**前后端一体的全栈个人博客系统**：前台负�
 - **标签体系** — 文章与列表中的标签可点击筛选，归档页提供标签云总览
 - **阅读足迹** — 最近阅读与文章收藏（localStorage 本地留存），支持单条删除与一键清空
 - **全局命令面板** — 任意页面 `Ctrl+K` 或点击导航栏搜索按钮唤起，键盘上下选择、回车直达文章，支持正文级匹配与片段预览
-- **内容互动** — 阅读量自动上报、文章点赞与收藏、基于 GitHub Discussions 的评论（Giscus，按文档独立讨论串、懒加载）、留言板、全文输出 RSS 2.0 订阅
+- **内容互动** — 阅读量自动上报、文章点赞与收藏、基于 GitHub Discussions 的评论（Giscus，按文档独立讨论串、懒加载）、留言板、全文输出 RSS 2.0 订阅（每篇独立链接）
 - **归档与友链** — 文档按年份时间线归档、独立友链页与申请指引
+- **可分享的文章链接** — 每篇文章有独立 URL（`/knowledge/:id`），刷新、收藏、浏览器前进后退均可还原；旧版 `#/` 链接会自动重定向，不会失效
 - **多格式导出** — 任意文档一键导出 Markdown / PDF / JSON；PDF 由前端按 A4 分页合成，避免跨页截断文字
 - **项目展示** — 分类筛选与模糊搜索、卡片式项目介绍，涵盖技术栈、角色职责、核心功能、交付成果与量化指标
 - **个人介绍** — 个人简介、技能树、项目经验、教育背景、成长路径、联系方式
@@ -85,6 +86,7 @@ Velpro Blog 是一个**前后端一体的全栈个人博客系统**：前台负�
 - **类型安全** — TypeScript 全量类型覆盖，`vue-tsc` 严格检查；组件与 API 自动导入，开发零样板代码
 - **持续集成** — GitHub Actions 在推送 / PR 时执行类型检查、生产构建与后端语法检查（`.github/workflows/ci.yml`），内容备份提交带 `[skip ci]` 不触发
 - **基础安全** — JWT + Argon2 密码哈希；登录接口与公开写接口按来源限流（防爆破 / 防刷量）；CORS 白名单；`ENVIRONMENT=production` 时拒绝以默认 `JWT_SECRET` 启动
+- **搜索引擎友好** — History 路由与文章独立 URL（可分享、可被收录）、运行时生成的 `sitemap.xml`、`robots.txt` 屏蔽后台与登录页、每页独立标题与描述
 
 ## 🏗 全栈架构
 
@@ -250,7 +252,7 @@ python scripts/seed_content.py
 
 ## 🔌 API 概览
 
-所有接口以 `/api` 为前缀，统一返回 `{ code, data, message }`：
+所有接口以 `/api` 为前缀，统一返回 `{ code, data, message }`（`/sitemap.xml` 为根级例外，见下表）：
 
 | 方法     | 端点                            | 说明                               | 鉴权       |
 | -------- | ------------------------------- | ---------------------------------- | ---------- |
@@ -275,7 +277,8 @@ python scripts/seed_content.py
 | `GET`    | `/api/profile`                  | 获取站点（个人介绍页）资料         | -          |
 | `PUT`    | `/api/profile`                  | 更新站点资料                       | ✅         |
 | `GET`    | `/api/stats`                    | 后台看板统计（概览 / Top 榜 / 标签 / 月度） | ✅ |
-| `GET`    | `/api/rss.xml`                  | RSS 2.0 订阅源（由已发布文档生成） | -          |
+| `GET`    | `/api/rss.xml`                  | RSS 2.0 订阅源（由已发布文档生成，每篇独立链接） | - |
+| `GET`    | `/sitemap.xml`                  | 站点地图（根级路径，非 `/api` 前缀） | -         |
 | `POST`   | `/api/ai/chat`                  | AI 流式对话（SSE）                 | 服务端 Key |
 | `GET`    | `/api/health`                   | 健康检查                           | -          |
 
@@ -300,7 +303,8 @@ velpro-blog/
 │   └── index.py              # Vercel Python 入口，导出 FastAPI app
 ├── backend/                  # 后端（FastAPI）
 │   ├── app/
-│   │   ├── routers/          # 路由模块：auth / docs / ai / projects / profile / stats / rss
+│   │   ├── routers/          # 路由模块：auth / docs / ai / projects / profile / stats / rss / sitemap
+│   │   ├── rate_limit.py     # 进程内滑动窗口限流（登录 / 公开写接口）
 │   │   ├── config.py         # pydantic-settings 环境配置
 │   │   ├── database.py       # SQLAlchemy 引擎 / 连接池 / Session
 │   │   ├── models.py         # 数据模型：Doc / User / Project / SiteProfile
@@ -309,7 +313,7 @@ velpro-blog/
 │   │   └── main.py           # 应用入口：中间件 / 异常处理 / 路由注册 / 自动建表
 │   └── certs/                # 数据库 CA 证书目录
 ├── scripts/                  # 数据脚本（静态文档种子 / 导出 / 导入 / 数据库备份）
-├── public/                   # 静态资源
+├── public/                   # 静态资源（含 robots.txt）
 ├── src/
 │   ├── api/                  # Axios 封装（http.ts）与接口模块（auth / docs / ai / projects / profile / stats）
 │   ├── components/           # 公共组件（common / home / knowledge / admin）
@@ -320,12 +324,13 @@ velpro-blog/
 │   ├── store/                # Pinia 状态管理（user / docs / projects / profile / reading）
 │   ├── styles/               # 全局样式与 CSS 变量
 │   ├── types/                # TypeScript 类型定义
-│   ├── utils/                # 工具函数（Markdown 渲染 / 目录 / 存储 / 提示）
+│   ├── utils/                # 工具函数（Markdown 渲染 / 目录 / 存储 / 提示 / meta / 导出 / 图片压缩）
 │   ├── views/                # 页面组件（含 admin/ 后台页面）
 │   ├── App.vue               # 根组件
 │   └── main.ts               # 应用入口
 ├── .github/
 │   └── workflows/
+│       ├── ci.yml            # 推送 / PR 触发类型检查、构建与后端语法检查
 │       └── backup.yml        # 每周自动备份数据库内容并提交到 backups/
 ├── backups/                  # 数据库内容备份（由 backup.yml 生成，自动提交）
 ├── .env.example              # 环境变量模板
@@ -341,6 +346,7 @@ velpro-blog/
 | ------------------- | -------- | ---------------------------------------- |
 | `/`                 | 首页     | Hero、技术特点与使用路径介绍             |
 | `/knowledge`        | 知识库   | 文档浏览、全文搜索、目录导航、导出与评论 |
+| `/knowledge/:id`    | 单篇文章 | 独立 URL（可分享、可被搜索引擎收录），刷新与前进后退均可还原 |
 | `/archive`          | 归档     | 按年份时间线回看全部文档 + 标签云        |
 | `/projects`         | 项目展示 | 分类筛选、模糊搜索、项目卡片             |
 | `/about`            | 个人介绍 | 个人简介、技能树与成长路径               |
@@ -367,9 +373,10 @@ velpro-blog/
 
 以下为计划中的演进方向（顺序不分先后，欢迎 Issue 讨论）：
 
+- [x] 迁移 History 路由，文章独立 URL + 动态 `sitemap.xml` + `robots.txt`
+- [ ] **分享卡片（OG）按页注入** — History 路由已就绪，但社交抓取器（微信 / X）不执行 JS，需服务端注入 meta 才能真正出卡片
 - [ ] 图片持久化存储（对象存储 / 图床，当前编辑器图片为本地预览）
 - [ ] 看板浏览趋势折线（按日计数表 `view_logs`）
-- [ ] 迁移 History 路由，解锁每页分享卡片（OG）与 sitemap
 - [ ] 数据库迁移引入 Alembic；补充 pytest / Vitest 自动化回归
 - [ ] AI 总结跨会话缓存、AI 助手接入站点级 RAG 检索
 - [ ] 评论邮件通知、访客统计
@@ -380,7 +387,7 @@ velpro-blog/
 
 导入仓库即可部署，`vercel.json` 已声明完整构建与路由方案：
 
-- `api/index.py` — Python Serverless 函数承载全部 `/api/*` 请求（`maxDuration: 60`）
+- `api/index.py` — Python Serverless 函数承载全部 `/api/*` 请求（`maxDuration: 60`）与根级 `/sitemap.xml`
 - `package.json` — 静态构建产出 `dist/`
 - 其余路径回退到 `index.html`，支持前端路由
 

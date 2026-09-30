@@ -1,4 +1,5 @@
 import axios from 'axios'
+import router from '@/router'
 import type { ApiResponse } from '@/types/api'
 import { useUserStore } from '@/store/modules/user'
 import { showToast } from '@/utils/toast'
@@ -38,7 +39,11 @@ http.interceptors.response.use(
 
     if (status === 401) {
       userStore.clearSession()
-      window.location.hash = '#/login'
+
+      // History 模式下用 router 跳转（不再改 location.hash）
+      if (router.currentRoute.value.name !== 'login') {
+        void router.replace({ name: 'login' })
+      }
     }
 
     showToast(error.response?.data?.message || error.message || '网络开小差了', { type: 'error' })

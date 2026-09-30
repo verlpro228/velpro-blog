@@ -100,9 +100,15 @@ function goDoc(docId: string) {
   closePalette()
   docsStore.setActiveDoc(docId)
 
-  if (router.currentRoute.value.path !== '/knowledge') {
-    void router.push('/knowledge')
+  const current = router.currentRoute.value
+  const currentId = typeof current.params.id === 'string' ? current.params.id : ''
+
+  // 已在同一篇文章上就不重复 push，避免产生多余的历史记录
+  if (current.name === 'knowledge' && currentId === docId) {
+    return
   }
+
+  void router.push({ name: 'knowledge', params: { id: docId } })
 }
 
 function onKeydown(event: KeyboardEvent) {

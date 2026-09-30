@@ -32,7 +32,6 @@ def rss_feed(response: Response, db: Session = Depends(get_db)):
 
     settings = get_settings()
     site = settings.site_url.rstrip("/")
-    knowledge_url = f"{site}/#/knowledge"
 
     rows = (
         db.query(Doc.id, Doc.title, Doc.summary, Doc.content, Doc.create_time)
@@ -44,12 +43,14 @@ def rss_feed(response: Response, db: Session = Depends(get_db)):
 
     items = []
     for doc in rows:
+        # 每篇指向自己的独立 URL（History 路由后不再是统一的 /#/knowledge）
+        doc_url = f"{site}/knowledge/{doc.id}"
         # 全文输出：CDATA 包裹让阅读器内直接读全文；content 中若出现 "]]>" 需拆分转义
         cdata_content = (doc.content or "").replace("]]>", "]]]]><![CDATA[>")
         items.append(
             "<item>"
             f"<title>{escape(doc.title)}</title>"
-            f"<link>{escape(knowledge_url)}</link>"
+            f"<link>{escape(doc_url)}</link>"
             '<guid isPermaLink="false">'
             f"{escape(doc.id)}"
             "</guid>"

@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
   const elementPlusResolver = ElementPlusResolver({
     importStyle: 'css',
   })
+  const apiProxyTarget = env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000'
 
   return {
     resolve: {
@@ -67,9 +68,14 @@ export default defineConfig(({ mode }) => {
     server: {
       open: true,
       proxy: {
-        // 开发环境把 /api 转发到本地 FastAPI（uvicorn），可用 VITE_API_PROXY_TARGET 覆盖
+        // 开发环境把 /api 与根级 /sitemap.xml 都转发到本地 FastAPI（uvicorn），
+        // 目标可用 VITE_API_PROXY_TARGET 覆盖
         '/api': {
-          target: env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000',
+          target: apiProxyTarget,
+          changeOrigin: true,
+        },
+        '/sitemap.xml': {
+          target: apiProxyTarget,
           changeOrigin: true,
         },
       },

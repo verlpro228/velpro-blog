@@ -26,6 +26,9 @@ __pycache__/
 smoke.db
 scripts/docs-seed.json
 
+# 浏览器自动化产物（playwright-cli 快照等）
+.playwright-cli/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -16,8 +16,11 @@ const fabRef = ref<HTMLElement | null>(null)
 
 const currentDoc = computed(() => docsStore.currentDoc)
 
-// 仅在知识库页且有当前文章时显示（AI 总结需要文章全文）
-const visible = computed(() => route.path === '/knowledge' && Boolean(currentDoc.value?.content?.trim()))
+// 仅在知识库页且有当前文章时显示（AI 总结需要文章全文）。
+// 用路由名而非 path 判断：文章页是 /knowledge/doc-xxx，path 不再等于 '/knowledge'
+const visible = computed(
+  () => route.name === 'knowledge' && Boolean(currentDoc.value?.content?.trim()),
+)
 
 onClickOutside(fabRef, () => {
   isOpen.value = false

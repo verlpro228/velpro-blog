@@ -19,6 +19,9 @@ const openCommandPalette = () => {
 }
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+
+// 导航高亮用 meta.navPath：文章页是 /knowledge/doc-xxx，route.path 无法直接与导航项比对
+const activeNavPath = computed(() => (route.meta.navPath as string | undefined) ?? route.path)
 const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '切换深色模式'))
 </script>
 
@@ -42,7 +45,7 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
             :key="item.path"
             :to="item.path"
             class="app-nav-link text-sm font-medium"
-            :class="{ 'is-active': route.path === item.path }"
+            :class="{ 'is-active': activeNavPath === item.path }"
           >
             {{ item.label }}
           </RouterLink>
@@ -138,7 +141,7 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
             :key="item.path"
             :to="item.path"
             class="app-route-pill shrink-0 rounded-full px-4 py-2 text-sm font-medium transition"
-            :class="route.path === item.path ? 'border-cyan-400/30 bg-cyan-400/12 text-slate-50' : ''"
+            :class="activeNavPath === item.path ? 'border-cyan-400/30 bg-cyan-400/12 text-slate-50' : ''"
           >
             {{ item.label }}
           </RouterLink>

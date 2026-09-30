@@ -54,7 +54,8 @@ onMounted(() => {
 
 function openDoc(docId: string) {
   docsStore.setActiveDoc(docId)
-  router.push('/knowledge')
+  // 直接跳到文章独立 URL，链接可分享
+  void router.push({ name: 'knowledge', params: { id: docId } })
 }
 </script>
 

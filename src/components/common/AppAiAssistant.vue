@@ -40,7 +40,8 @@ const baseSystemMessage: AiChatMessage = {
 const articleContextMessage = computed<AiChatMessage | null>(() => {
   const doc = docsStore.currentDoc
 
-  if (route.path !== '/knowledge' || !doc?.content?.trim()) {
+  // 用路由名而非 path 判断：文章页是 /knowledge/doc-xxx，path 不再等于 '/knowledge'
+  if (route.name !== 'knowledge' || !doc?.content?.trim()) {
     return null
   }
 

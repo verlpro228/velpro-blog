@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# 后台与登录页不进搜索引擎索引
+Disallow: /admin
+Disallow: /login
+
+Sitemap: https://www.velpro.xyz/sitemap.xml
