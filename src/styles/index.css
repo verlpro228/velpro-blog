@@ -1876,3 +1876,64 @@ button {
   color: #f43f5e;
   background: rgba(244, 63, 94, 0.1);
 }
+
+/* ===== 项目展示页与知识库风格统一：浅色白底卡片 + 暗色同款深玻璃 ===== */
+
+:root.theme-light .projects-page .app-card {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 6px 20px rgba(15, 23, 42, 0.04);
+}
+
+:root.theme-dark .projects-page .app-card {
+  border-color: var(--color-border) !important;
+  background: var(--color-surface-strong) !important;
+  box-shadow: var(--shadow-panel);
+}
+
+/* 技术栈胶囊：浅色下白底描边，与知识库标签一致 */
+:root.theme-light .projects-page .app-tag-pill {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: #f8fafc;
+  color: #64748b;
+}
+
+/* 分类筛选按钮底色对齐白卡 */
+:root.theme-light .projects-page .app-filter-button {
+  background: #f8fafc;
+}
+
+/* 激活态恢复青色底（上面的白底覆盖特异性更高，需单独补回） */
+:root.theme-light .projects-page .app-filter-button.is-active {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  box-shadow: 0 12px 24px rgba(14, 116, 144, 0.18);
+}
+
+:root.theme-dark .projects-page .app-filter-button {
+  background: var(--color-surface-soft);
+}
+
+:root.theme-dark .projects-page .app-filter-button.is-active {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  box-shadow: 0 12px 24px rgba(14, 116, 144, 0.18);
+}
+
+/* ===== 个人介绍页与知识库风格统一：浅色白底卡片 + 暗色同款深玻璃 ===== */
+
+:root.theme-light .about-page .app-card {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 6px 20px rgba(15, 23, 42, 0.04);
+}
+
+:root.theme-dark .about-page .app-card {
+  border-color: var(--color-border) !important;
+  background: var(--color-surface-strong) !important;
+  box-shadow: var(--shadow-panel);
+}

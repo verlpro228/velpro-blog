@@ -37,7 +37,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="px-4 pb-12 sm:px-6 sm:pb-16">
+  <section class="about-page px-4 pb-12 sm:px-6 sm:pb-16">
     <div class="mx-auto max-w-7xl">
       <div class="grid gap-6 xl:grid-cols-[minmax(280px,0.32fr)_minmax(0,0.68fr)]">
         <aside class="self-start space-y-6 xl:sticky xl:top-6">
