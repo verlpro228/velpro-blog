@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     # 站点对外地址（RSS 等订阅内容的链接前缀）
     site_url: str = "https://www.velpro.xyz"
 
+    # 运行环境：development / production。
+    # 显式设为 production 时，启动会校验 JWT_SECRET 不是默认值（见 main.verify_security_config）
+    environment: str = "development"
+
+    # 允许跨域的来源（逗号分隔）。前后端同域部署（Vercel 的默认形态）时浏览器不会触发跨域，
+    # 默认只放行本地开发端口；前后端分域部署时用 CORS_ORIGINS 显式追加自己的域名。
+    cors_origins: str = (
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173"
+    )
+
     jwt_secret: str = "please-change-me"
     jwt_expire_hours: int = 24 * 7
 
@@ -61,6 +71,23 @@ class Settings(BaseSettings):
     @property
     def longcat_chat_url(self) -> str:
         return f"{self.longcat_base_url.rstrip('/')}/chat/completions"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        """解析 CORS_ORIGINS，并始终带上站点自身来源。"""
+        origins = [item.strip() for item in self.cors_origins.split(",") if item.strip()]
+        site = self.site_url.rstrip("/")
+        if site and site not in origins:
+            origins.append(site)
+        return origins
+
+    @property
+    def is_explicit_production(self) -> bool:
+        return self.environment.strip().lower() in {"production", "prod"}
+
+    @property
+    def jwt_secret_is_default(self) -> bool:
+        return self.jwt_secret.strip() in {"", "please-change-me"}
 
 
 @lru_cache

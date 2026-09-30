@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import User
+from ..rate_limit import SlidingWindowLimiter, limit_requests
 from ..schemas import LoginPayload, PasswordUpdatePayload, ProfileUpdatePayload, ok
 from ..security import (
     create_access_token,
@@ -14,8 +15,11 @@ from ..security import (
 
 router = APIRouter()
 
+# 登录接口限流：同一来源 5 分钟内最多 10 次，拦住脚本化密码爆破
+login_limiter = SlidingWindowLimiter(max_events=10, window_seconds=300)
 
-@router.post("/login")
+
+@router.post("/login", dependencies=[Depends(limit_requests(login_limiter, "login"))])
 def login(payload: LoginPayload, db: Session = Depends(get_db)):
     username = payload.username.strip()
     user = db.query(User).filter(User.username == username).first()

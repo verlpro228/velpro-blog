@@ -1,0 +1,54 @@
+# 持续集成：推送到 main 或发起 PR 时做类型检查 / 构建 / 后端语法检查，
+# 防止类型错误、构建失败、语法错误被合进主干。
+# 内容备份提交带 [skip ci]，不会触发本工作流。
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  frontend:
+    name: 前端类型检查与构建
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v5
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.0.9
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 类型检查
+        run: pnpm type-check
+
+      - name: 生产构建
+        run: pnpm build
+
+  backend:
+    name: 后端语法检查
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v5
+
+      - name: 安装 Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: 编译检查（仅语法，不安装运行依赖）
+        run: python -m compileall -q backend api scripts

@@ -7,10 +7,14 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import Doc, User
+from ..rate_limit import SlidingWindowLimiter, limit_requests
 from ..schemas import DocMutationPayload, ok
 from ..security import get_current_user
 
 router = APIRouter()
+
+# 阅读量/点赞是公开写接口，按来源限流防止脚本刷量（正常阅读每篇每会话只上报一次）
+interaction_limiter = SlidingWindowLimiter(max_events=30, window_seconds=60)
 
 
 def serialize_doc(doc: Doc, *, include_content: bool = True) -> dict:
@@ -138,7 +142,7 @@ def delete_doc(
     return ok({"success": True}, "删除成功")
 
 
-@router.post("/{doc_id}/view")
+@router.post("/{doc_id}/view", dependencies=[Depends(limit_requests(interaction_limiter, "view"))])
 def report_view(doc_id: str, db: Session = Depends(get_db)):
     """浏览量 +1（客户端每会话去重，公开文档才计数）。"""
     doc = get_doc_or_404(db, doc_id)
@@ -152,7 +156,7 @@ def report_view(doc_id: str, db: Session = Depends(get_db)):
     return ok({"views": doc.views})
 
 
-@router.post("/{doc_id}/like")
+@router.post("/{doc_id}/like", dependencies=[Depends(limit_requests(interaction_limiter, "like"))])
 def like_doc(doc_id: str, db: Session = Depends(get_db)):
     """点赞 +1（客户端本地存储去重，公开文档才可赞）。"""
     doc = get_doc_or_404(db, doc_id)

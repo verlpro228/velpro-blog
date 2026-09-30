@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -11,6 +12,28 @@ from .database import Base, SessionLocal, engine
 from .models import User
 from .routers import ai, auth, docs, profile, projects, rss, stats
 from .security import hash_password
+
+logger = logging.getLogger("velpro")
+
+
+def verify_security_config() -> None:
+    """启动前校验安全相关配置。
+
+    JWT_SECRET 用默认值时：显式 production 环境直接拒绝启动（避免带默认密钥上线），
+    其余环境只打告警，不打断本地开发。
+    """
+    settings = get_settings()
+    if not settings.jwt_secret_is_default:
+        return
+
+    message = (
+        "JWT_SECRET 仍是默认值 'please-change-me'，任何人都能伪造登录态。"
+        '请执行 python -c "import secrets; print(secrets.token_hex(32))" 生成后写入 .env / Vercel 环境变量。'
+    )
+    if settings.is_explicit_production:
+        raise RuntimeError(message)
+
+    logger.warning(message)
 
 
 def ensure_admin_user() -> None:
@@ -48,13 +71,17 @@ async def lifespan(_: FastAPI):
     yield
 
 
+verify_security_config()
+
 app = FastAPI(title="velpro-blog-api", lifespan=lifespan)
 
+# 前后端同域部署时浏览器不触发跨域，这里只放行本地开发端口与站点自身来源，
+# 需要额外域名时通过 CORS_ORIGINS 显式追加（不再使用 allow_origins=["*"]）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=get_settings().cors_origin_list,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # 文档接口返回全文 markdown（70KB+），压缩后体积能小 80%，跨地域传输提速明显

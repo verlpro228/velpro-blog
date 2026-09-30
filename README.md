@@ -83,6 +83,8 @@ Velpro Blog 是一个**前后端一体的全栈个人博客系统**：前台负�
 - **Serverless 友好** — 小连接池 + 空闲回收 + 探活策略，适配函数冻结/唤醒与跨地域数据库
 - **重型依赖按需加载** — 导出 PDF 所需的 jsPDF / html2canvas 通过动态 `import()` 加载，仅在点击导出时才下载对应 chunk，不进入首屏
 - **类型安全** — TypeScript 全量类型覆盖，`vue-tsc` 严格检查；组件与 API 自动导入，开发零样板代码
+- **持续集成** — GitHub Actions 在推送 / PR 时执行类型检查、生产构建与后端语法检查（`.github/workflows/ci.yml`），内容备份提交带 `[skip ci]` 不触发
+- **基础安全** — JWT + Argon2 密码哈希；登录接口与公开写接口按来源限流（防爆破 / 防刷量）；CORS 白名单；`ENVIRONMENT=production` 时拒绝以默认 `JWT_SECRET` 启动
 
 ## 🏗 全栈架构
 
@@ -230,6 +232,8 @@ python scripts/seed_content.py
 | ------------------------ | -------------- | --------------------------------------------------------- | ------------------------ |
 | `DATABASE_URL`           | 是             | MySQL 连接串，如 `mysql+pymysql://user:pass@host:port/db` | 本地 `velpro_blog` 库    |
 | `DB_SSL_CA_PATH`         | 否             | Aiven CA 证书路径（留空则仅加密不验证证书）               | `backend/certs/ca.pem`   |
+| `ENVIRONMENT`            | 否             | 运行环境；设为 `production` 时启动会校验 `JWT_SECRET` 非默认值 | `development`            |
+| `CORS_ORIGINS`           | 否             | 允许跨域的来源（逗号分隔）；前后端同域部署时无需配置      | 本地开发端口 + 站点地址  |
 | `JWT_SECRET`             | 生产必填       | JWT 签名密钥，建议随机长字符串                            | `please-change-me`       |
 | `JWT_EXPIRE_HOURS`       | 否             | Token 有效期（小时）                                      | `168`（7 天）            |
 | `ADMIN_USERNAME`         | 否             | 管理员用户名                                              | `velpro`                 |
@@ -304,13 +308,12 @@ velpro-blog/
 │   │   ├── security.py       # JWT 签发校验 + Argon2 密码哈希
 │   │   └── main.py           # 应用入口：中间件 / 异常处理 / 路由注册 / 自动建表
 │   └── certs/                # 数据库 CA 证书目录
-├── scripts/                  # 数据脚本（文档导出 / 种子数据导入 / 数据库备份）
+├── scripts/                  # 数据脚本（静态文档种子 / 导出 / 导入 / 数据库备份）
 ├── public/                   # 静态资源
 ├── src/
 │   ├── api/                  # Axios 封装（http.ts）与接口模块（auth / docs / ai / projects / profile / stats）
 │   ├── components/           # 公共组件（common / home / knowledge / admin）
 │   ├── constants/            # 应用常量（导航 / 存储键）
-│   ├── data/                 # 历史静态文档种子（内容已迁入数据库，当前不再引用）
 │   ├── hooks/                # 组合式函数（动画 / 搜索 / 认证 / 主题 / 请求等）
 │   ├── layout/               # 布局组件（BaseLayout / AdminLayout）
 │   ├── router/               # 路由配置与登录守卫
@@ -381,7 +384,7 @@ velpro-blog/
 - `package.json` — 静态构建产出 `dist/`
 - 其余路径回退到 `index.html`，支持前端路由
 
-只需在项目 Settings → Environment Variables 中配置 `DATABASE_URL`、`JWT_SECRET`、`ADMIN_PASSWORD`、`LONGCAT_API_KEY` 等变量；建议同时设置 `SITE_URL` 为线上域名，用于生成正确的 RSS 订阅链接。若数据库未使用 CA 证书，可留空 `DB_SSL_CA_PATH`（仅加密不验证）。
+只需在项目 Settings → Environment Variables 中配置 `DATABASE_URL`、`JWT_SECRET`、`ADMIN_PASSWORD`、`LONGCAT_API_KEY` 等变量；建议同时设置 `SITE_URL` 为线上域名（生成正确的 RSS 订阅链接）与 `ENVIRONMENT=production`（启动时校验 `JWT_SECRET` 已替换默认值，用默认密钥会直接拒绝启动）。若数据库未使用 CA 证书，可留空 `DB_SSL_CA_PATH`（仅加密不验证）。
 
 > 生产环境请使用强密码与随机 `JWT_SECRET`，不要沿用示例或本地开发值。
 
@@ -456,4 +459,4 @@ server {
 
 本项目基于 MIT 协议开源 © [verlpro228](https://github.com/verlpro228)
 
-> 仓库根目录暂未包含 `LICENSE` 文件，如需正式声明开源协议，请补充该文件。
+> 完整协议文本见仓库根目录 [LICENSE](./LICENSE)。
