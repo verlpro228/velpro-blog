@@ -28,7 +28,8 @@ def to_rfc822(date_text: str) -> str:
 @router.get("/rss.xml")
 def rss_feed(response: Response, db: Session = Depends(get_db)):
     """RSS 2.0 订阅源：运行时从已发布文档生成，供阅读器订阅。"""
-    response.headers["Cache-Control"] = "public, max-age=1800"
+    # s-maxage 是 Vercel CDN 缓存的开关；只写 max-age 会被覆盖成 max-age=0
+    response.headers["Cache-Control"] = "public, s-maxage=1800, stale-while-revalidate=300"
 
     settings = get_settings()
     site = settings.site_url.rstrip("/")

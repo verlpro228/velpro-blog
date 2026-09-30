@@ -30,7 +30,10 @@ STATIC_PAGES = [
 @router.get("/sitemap.xml")
 def sitemap(response: Response, db: Session = Depends(get_db)):
     """sitemap.xml：固定页面 + 全部已发布文档（每篇一个独立 URL）。"""
-    response.headers["Cache-Control"] = "public, max-age=1800"
+    # 必须带 s-maxage，Vercel 才会把函数响应放进 CDN 缓存。
+    # 只写 max-age 会被 Vercel 覆盖成 "max-age=0, must-revalidate"，
+    # 导致每次抓取都要冷启动函数 + 跨区查库（实测冷启动 5.6s），搜索引擎容易抓取失败。
+    response.headers["Cache-Control"] = "public, s-maxage=1800, stale-while-revalidate=300"
 
     site = get_settings().site_url.rstrip("/")
 
