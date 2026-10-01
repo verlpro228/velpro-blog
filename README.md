@@ -114,7 +114,7 @@ flowchart LR
 | [Vue](https://vuejs.org)                     | ^3.5           | 渐进式 JavaScript 框架          |
 | [Vite](https://vite.dev)                     | ^8.0           | 下一代前端构建工具              |
 | [TypeScript](https://www.typescriptlang.org) | ^6.0           | JavaScript 超集，提供类型检查   |
-| [Vue Router](https://router.vuejs.org)       | ^4.6           | Vue 官方路由管理器（Hash 模式） |
+| [Vue Router](https://router.vuejs.org)       | ^4.6           | Vue 官方路由管理器（History 模式） |
 | [Pinia](https://pinia.vuejs.org)             | ^3.0           | Vue 状态管理库                  |
 | [Element Plus](https://element-plus.org)     | ^2.13          | Vue 3 UI 组件库                 |
 | [Tailwind CSS](https://tailwindcss.com)      | ^3.4           | 原子化 CSS 框架                 |
