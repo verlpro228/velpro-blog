@@ -4,7 +4,7 @@
 
 **Vue 3 + FastAPI 打造的现代全栈个人博客**
 
-知识库 · 全文检索 · AI 总结与问答 · 数据看板 · 一次部署
+知识库 · 全文检索 · AI 总结与问答 · 数据看板 · 3D 知识星球 · 一次部署
 
 [在线演示](https://www.velpro.xyz) · [快速开始](#-快速开始) · [架构设计](#-全栈架构) · [API 概览](#-api-概览) · [路线图](#-路线图)
 
@@ -45,7 +45,7 @@ Velpro Blog 是一个**前后端一体的全栈个人博客系统**：前台负�
 
 ### 前台展示
 
-- **首页** — 动态 Hero + 实时站点统计（文档数 / 项目数 / 累计阅读），GSAP 滚动动画与悬停交互
+- **首页** — 动态 Hero + **Three.js 写实地球**（NASA 贴图 + 云层 + 大气辉光，知识标签随球自转、悬停预览、点击直达对应文章）+ 实时站点统计（数字滚动），GSAP 滚动动画与悬停交互
 - **知识库** — Fuse.js 全文检索（标题 / 标签 / **正文**，命中片段高亮预览）、Markdown 渲染与代码高亮、目录导航（TOC，小屏内嵌折叠 / 大屏右侧吸附）、阅读进度追踪、断点续读、代码一键复制、图片灯箱、上一篇/下一篇与相关阅读
 - **AI 能力** — 文章一键 **AI 要点总结**（文章头部按钮 / 右上角胶囊双入口，流式生成、一键复制）；AI 助手在知识库页**自动关联当前文章**，可就内容直接提问（边读边问）
 - **标签体系** — 文章与列表中的标签可点击筛选，归档页提供标签云总览
@@ -118,14 +118,13 @@ flowchart LR
 | [Pinia](https://pinia.vuejs.org)             | ^3.0           | Vue 状态管理库                  |
 | [Element Plus](https://element-plus.org)     | ^2.13          | Vue 3 UI 组件库                 |
 | [Tailwind CSS](https://tailwindcss.com)      | ^3.4           | 原子化 CSS 框架                 |
-| Sass                                         | ^1.99          | CSS 预处理器                    |
 | Axios                                        | ^1.15          | HTTP 请求库（统一封装与拦截器） |
 | markdown-it + highlight.js                   | ^14.1 / ^11.11 | Markdown 渲染与代码高亮         |
 | Fuse.js                                      | ^7.3           | 轻量级模糊搜索                  |
 | ECharts                                      | ^6.1           | 后台数据看板可视化（按需引入）  |
 | html2canvas-pro + jsPDF                      | ^2.4 / ^4.2    | 前端按 A4 分页合成 PDF 导出     |
 | GSAP                                         | ^3.15          | 专业动画库                      |
-| Vanta + Three                                | ^0.5 / ^0.183  | WebGL 动效背景                  |
+| Three.js                                     | ^0.183         | 首页「知识星球」3D 场景（自研，懒加载） |
 | @vueuse/core                                 | ^14.2          | Vue Composition API 工具集      |
 | pinia-plugin-persistedstate                  | ^4.7           | Pinia 状态持久化                |
 
@@ -249,6 +248,7 @@ python scripts/seed_content.py
 | `SITE_URL`               | 否             | 站点地址，用于生成 RSS 订阅链接                           | `https://www.velpro.xyz` |
 | `VITE_API_PROXY_TARGET`  | 否             | 开发环境 `/api` 代理目标                                  | `http://127.0.0.1:8000`  |
 | `VITE_AI_PROXY_ENDPOINT` | 否             | 前端请求的 AI 代理端点                                    | `/api/ai/chat`           |
+| `VITE_ENABLE_AI_ASSISTANT` | 否           | 设为 `false` 可整体隐藏首页 AI 助手悬浮按钮               | `true`                   |
 
 ## 🔌 API 概览
 

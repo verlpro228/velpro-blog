@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { usePreferredReducedMotion } from "@vueuse/core";
+import { computed, onMounted } from "vue";
+import { useCountUp } from "@/hooks/useCountUp";
 import { useDocsStore } from "@/store/modules/docs";
 import { useProjectsStore } from "@/store/modules/projects";
-
-interface VantaEffect {
-  destroy: () => void;
-  resize?: () => void;
-}
 
 const heroTitle = "阅读 · 检索 · 对话";
 const heroChars = Array.from(heroTitle);
@@ -22,20 +17,51 @@ const totalViews = computed(() =>
   docsStore.docs.reduce((sum, doc) => sum + (doc.views ?? 0), 0),
 );
 
-const heroMetrics = computed(() => [
+// 统计卡数据源：就绪判定与取值逻辑与改动前完全一致，
+// 只是把「目标数字」和「展示文案」拆开，中间留出滚动动画的位置
+const metricSources = computed(() => [
   {
     label: "已发布文档",
-    value: siteStatsReady.value ? `${docsStore.docs.length} 篇` : "—",
+    suffix: " 篇",
+    value: siteStatsReady.value ? docsStore.docs.length : null,
   },
   {
     label: "在线项目",
-    value: siteStatsReady.value && projectsStore.initialized ? `${projectsStore.projects.length} 个` : "—",
+    suffix: " 个",
+    value: siteStatsReady.value && projectsStore.initialized
+      ? projectsStore.projects.length
+      : null,
   },
   {
     label: "累计阅读",
-    value: siteStatsReady.value ? totalViews.value.toLocaleString() : "—",
+    suffix: "",
+    value: siteStatsReady.value ? totalViews.value : null,
   },
 ]);
+
+// 三张卡全部就绪后才把目标值交给动画（任一未就绪返回 null → 展示占位符）
+const metricTargets = computed<number[] | null>(() => {
+  const values = metricSources.value.map((metric) => metric.value);
+
+  return values.some((value) => value === null) ? null : (values as number[]);
+});
+
+// 数字滚动：0 → 目标值，1.2s easeOutCubic；减弱动态时直接显示终值
+const { display: displayNumbers } = useCountUp(metricTargets);
+
+const heroMetrics = computed(() =>
+  metricSources.value.map((metric, index) => {
+    const current = displayNumbers.value[index];
+
+    return {
+      label: metric.label,
+      value:
+        metric.value === null || current === undefined
+          ? "—"
+          : `${current.toLocaleString()}${metric.suffix}`,
+    };
+  }),
+);
 
 const capabilityTags = [
   "Vue 3",
@@ -46,127 +72,7 @@ const capabilityTags = [
   "AI 流式对话",
 ];
 
-const vantaContainerRef = ref<HTMLElement | null>(null);
-const preferredReducedMotion = usePreferredReducedMotion();
-let vantaEffect: VantaEffect | null = null;
-let vantaFactoryPromise: Promise<
-  (options: Record<string, unknown>) => VantaEffect
-> | null = null;
-let isInitializing = false;
-
-const VANTA_MIN_WIDTH = 640;
-
-const canEnableVanta = () =>
-  typeof window !== "undefined" && window.innerWidth >= VANTA_MIN_WIDTH;
-
-const getVantaOptions = () => {
-  const reducedMotion = preferredReducedMotion.value === "reduce";
-
-  return {
-    mouseControls: true,
-    touchControls: true,
-    gyroControls: true,
-    minHeight: 100,
-    minWidth: 100,
-    baseColor: 0x163654,
-    backgroundColor: 0x272756,
-    speed: reducedMotion ? 0.3 : 1,
-    amplitudeFactor: reducedMotion ? 0.45 : 1,
-    rotationFactor: reducedMotion ? 0.5 : 1,
-    ringFactor: reducedMotion ? 0.75 : 1,
-  };
-};
-
-const loadVantaFactory = async () => {
-  if (!vantaFactoryPromise) {
-    vantaFactoryPromise = Promise.all([
-      import("three"),
-      import("vanta/dist/vanta.halo.min.js"),
-    ]).then(([threeModule, haloModule]) => {
-      const haloExport = haloModule.default as unknown;
-      const nestedHaloExport =
-        typeof haloExport === "object" && haloExport !== null
-          ? (haloExport as { default?: unknown }).default
-          : undefined;
-      const haloFactory =
-        typeof haloExport === "function"
-          ? (haloExport as (options: Record<string, unknown>) => VantaEffect)
-          : typeof nestedHaloExport === "function"
-            ? (nestedHaloExport as (
-                options: Record<string, unknown>,
-              ) => VantaEffect)
-            : null;
-
-      if (!haloFactory) {
-        throw new Error("Vanta HALO factory is unavailable");
-      }
-
-      return (options: Record<string, unknown>) =>
-        haloFactory({
-          THREE: threeModule,
-          ...options,
-        });
-    });
-  }
-
-  return vantaFactoryPromise;
-};
-
-const destroyVanta = () => {
-  vantaEffect?.destroy();
-  vantaEffect = null;
-};
-
-const initVanta = async () => {
-  if (!vantaContainerRef.value || !canEnableVanta() || isInitializing) {
-    return;
-  }
-
-  isInitializing = true;
-
-  try {
-    const createHalo = await loadVantaFactory();
-
-    destroyVanta();
-
-    vantaEffect = createHalo({
-      el: vantaContainerRef.value,
-      ...getVantaOptions(),
-    });
-
-    vantaEffect.resize?.();
-  } catch (error) {
-    console.warn("Vanta HALO 初始化失败：", error);
-  } finally {
-    isInitializing = false;
-  }
-};
-
-const scheduleVanta = () => {
-  window.requestAnimationFrame(() => {
-    void initVanta();
-  });
-};
-
-const handleViewportChange = () => {
-  if (!canEnableVanta()) {
-    destroyVanta();
-    return;
-  }
-
-  if (vantaEffect) {
-    vantaEffect.resize?.();
-    return;
-  }
-
-  void initVanta();
-};
-
-onMounted(async () => {
-  await nextTick();
-  scheduleVanta();
-  window.addEventListener("resize", handleViewportChange, { passive: true });
-
+onMounted(() => {
   // 拉取公开数据供 hero 统计卡展示（有缓存与 TTL，重复访问零请求）
   if (!docsStore.initialized) {
     void docsStore.fetchDocs();
@@ -175,12 +81,6 @@ onMounted(async () => {
   if (!projectsStore.initialized) {
     void projectsStore.fetchProjects();
   }
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", handleViewportChange);
-
-  destroyVanta();
 });
 </script>
 
@@ -194,7 +94,7 @@ onBeforeUnmount(() => {
     />
 
     <div
-      class="mx-auto grid max-w-7xl items-center gap-10 sm:gap-14 lg:grid-cols-[1.12fr_0.88fr]"
+      class="hero-stage mx-auto grid max-w-7xl items-center gap-10 sm:gap-14 lg:grid-cols-[1.12fr_0.88fr]"
     >
       <div>
         <p
@@ -276,11 +176,7 @@ onBeforeUnmount(() => {
           <div
             class="floating-panel overflow-hidden rounded-[1.75rem] border border-cyan-400/20 bg-cyan-400/10"
           >
-            <div
-              ref="vantaContainerRef"
-              class="hero-vanta-panel aspect-[4/3] w-full"
-              aria-label="Velpro Blog 动态背景"
-            />
+            <KnowledgeGalaxy class="hero-galaxy" />
           </div>
 
           <div class="grid gap-4 sm:grid-cols-2">
@@ -314,26 +210,24 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.hero-vanta-panel {
+/* 星图容器：保留原 Vanta 面板的深蓝渐变作为降级底，星图画布叠加其上 */
+.hero-galaxy {
   position: relative;
+  aspect-ratio: 4 / 3;
+  width: 100%;
   overflow: hidden;
+  border-radius: 1.5rem;
   background:
     radial-gradient(
-      circle at 20% 20%,
-      rgba(96, 165, 250, 0.26),
-      transparent 32%
+      ellipse at 24% 22%,
+      rgba(56, 130, 190, 0.22),
+      transparent 42%
     ),
     radial-gradient(
-      circle at 80% 25%,
-      rgba(34, 211, 238, 0.22),
-      transparent 28%
+      ellipse at 78% 80%,
+      rgba(14, 116, 144, 0.16),
+      transparent 46%
     ),
-    linear-gradient(135deg, rgba(19, 36, 76, 0.96), rgba(29, 78, 216, 0.82));
-}
-
-.hero-vanta-panel :deep(canvas) {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
+    linear-gradient(160deg, #071226 0%, #050b1a 55%, #030814 100%);
 }
 </style>

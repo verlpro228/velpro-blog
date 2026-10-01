@@ -21,10 +21,6 @@ export function useAsyncMarkdown(source?: Ref<string>, renderOptions?: RenderOpt
     }
   }
 
-  const warmup = async () => {
-    ready.value = true
-  }
-
   if (source) {
     watch(
       source,
@@ -40,6 +36,5 @@ export function useAsyncMarkdown(source?: Ref<string>, renderOptions?: RenderOpt
     loading,
     ready,
     render,
-    warmup,
   }
 }

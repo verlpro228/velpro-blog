@@ -8,11 +8,11 @@
         <p class="leading-6">面向开发者日常阅读与记录的技术博客系统</p>
       </div>
       <div class="flex flex-col gap-2 md:items-end">
-        <p class="leading-6">Vue 3 + TypeScript + Pinia + GSAP + Markdown + Vanta HALO</p>
+        <p class="leading-6">Vue 3 + TypeScript + Pinia + GSAP + Three.js + Markdown</p>
         <div class="flex items-center gap-4">
           <a
             class="app-footer-rss inline-flex items-center gap-1.5 text-xs leading-5 transition hover:opacity-80"
-            href="/#/links"
+            href="/links"
             title="友情链接"
           >
             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

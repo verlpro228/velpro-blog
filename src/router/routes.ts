@@ -6,7 +6,6 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/layout/BaseLayout.vue'),
     meta: {
       title: '首页',
-      layout: 'default',
     },
     children: [
       {
@@ -82,7 +81,6 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/LoginView.vue'),
     meta: {
       title: '登录',
-      layout: 'blank',
       noindex: true,
     },
   },
@@ -92,7 +90,6 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       title: '后台管理',
       requiresAuth: true,
-      layout: 'admin',
       // 子路由通过 meta 合并继承，后台全部页面都不进搜索引擎索引
       noindex: true,
     },
@@ -150,7 +147,6 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/NotFoundView.vue'),
     meta: {
       title: '页面不存在',
-      layout: 'blank',
     },
   },
 ]

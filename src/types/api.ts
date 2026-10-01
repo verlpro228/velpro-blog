@@ -3,13 +3,3 @@ export interface ApiResponse<T> {
   data: T
   message: string
 }
-
-export interface PaginationQuery {
-  page: number
-  pageSize: number
-}
-
-export interface PaginatedData<T> extends PaginationQuery {
-  list: T[]
-  total: number
-}
