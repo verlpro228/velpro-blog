@@ -44,9 +44,9 @@ function isSnippetHit(doc: SearchableDoc) {
       class="knowledge-sidebar-card rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:flex xl:h-full xl:min-h-0 xl:flex-col"
     >
       <div class="flex items-start justify-between gap-4">
-        <div>
+        <div class="min-w-0">
           <p class="knowledge-sidebar-title text-sm font-semibold tracking-[0.08em] text-gray-900">文档列表</p>
-          <p class="knowledge-sidebar-copy mt-1 text-xs leading-5 text-gray-500">{{ resultText }}</p>
+          <p class="knowledge-sidebar-copy mt-1 truncate text-xs leading-5 text-gray-500">{{ resultText }}</p>
         </div>
         <span
             class="knowledge-sidebar-count inline-flex min-w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600"
@@ -106,9 +106,9 @@ function isSnippetHit(doc: SearchableDoc) {
             "
             @click="emit('select', doc.id)"
           >
-            <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center justify-between gap-3">
               <h3
-                class="knowledge-list-item-title line-clamp-2 text-sm font-medium leading-6"
+                class="knowledge-list-item-title min-w-0 flex-1 truncate text-sm font-medium leading-6"
                 :class="activeDocId === doc.id ? 'text-blue-950' : 'text-gray-900'"
               >
                 {{ doc.title }}
@@ -116,14 +116,14 @@ function isSnippetHit(doc: SearchableDoc) {
               <span class="knowledge-list-item-date shrink-0 text-[11px] text-gray-400">{{ doc.createTime }}</span>
             </div>
 
-            <p v-if="isSnippetHit(doc)" class="knowledge-list-item-snippet mt-2 line-clamp-2 text-sm leading-6 text-gray-600">
+            <p v-if="isSnippetHit(doc)" class="knowledge-list-item-snippet mt-2 line-clamp-2 min-h-[48px] text-sm leading-6 text-gray-600">
               {{ doc.snippet?.before }}<mark class="snippet-hit">{{ doc.snippet?.hit }}</mark>{{ doc.snippet?.after }}
             </p>
-            <p v-else class="knowledge-list-item-summary mt-2 line-clamp-2 text-sm leading-6 text-gray-500">
+            <p v-else class="knowledge-list-item-summary mt-2 line-clamp-2 min-h-[48px] text-sm leading-6 text-gray-500">
               {{ doc.summary }}
             </p>
 
-            <div class="mt-3 flex flex-wrap gap-2">
+            <div class="mt-3 flex h-[60px] content-start flex-wrap gap-2 overflow-hidden">
               <!-- button 内不允许再嵌交互元素，标签用 span 承载点击 -->
               <span
                 v-for="tag in doc.tags"

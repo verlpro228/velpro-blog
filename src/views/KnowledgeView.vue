@@ -1,3 +1,9 @@
+<script lang="ts">
+// 导航意图必须放在模块级：BaseLayout 用 :key="route.fullPath" 渲染路由视图，
+// 每次切文都会销毁/新建组件实例，组件级变量会随旧实例丢失（selectDoc 置位的意图传不到新实例的 watcher）
+let pendingTopScroll = false
+</script>
+
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -42,12 +48,14 @@ function readRouteDocId() {
 }
 
 // URL → store：直接访问 /knowledge/doc-xxx（分享链接、刷新、前进后退）时激活对应文章
+// 滚动策略：无论以何种方式切到另一篇文章，正文渲染完成后一律回到文章顶部
 watch(
   () => route.params.id,
   () => {
     const docId = readRouteDocId()
 
     if (docId && docId !== docsStore.activeDocId) {
+      pendingTopScroll = true
       docsStore.setActiveDoc(docId)
     }
   },
@@ -88,6 +96,7 @@ function selectDoc(docId: string) {
     return
   }
 
+  pendingTopScroll = true
   void router.push({ name: 'knowledge', params: { id: docId } })
 }
 
@@ -316,15 +325,14 @@ watch(progress, (value) => {
   }
 })
 
-function continueReading() {
+// 与 useReadingProgress 的 page 模式公式一致，按百分比反推滚动位置
+function scrollToPercent(percent: number, behavior: ScrollBehavior = 'smooth') {
   const container = articleContainerRef.value
-  const percent = resumePercent.value
 
-  if (!container || percent === null) {
+  if (!container) {
     return
   }
 
-  // 与 useReadingProgress 的 page 模式公式一致，按百分比反推滚动位置
   const containerTop = window.scrollY + container.getBoundingClientRect().top
   const containerHeight = container.offsetHeight
   const viewportHeight = window.innerHeight
@@ -333,9 +341,19 @@ function continueReading() {
   const scrollEnd = Math.max(scrollStart + 1, containerTop + containerHeight - viewportHeight + topOffset)
 
   window.scrollTo({
-    top: scrollStart + (percent / 100) * (scrollEnd - scrollStart),
-    behavior: 'smooth',
+    top: scrollStart + (Math.min(100, Math.max(0, percent)) / 100) * (scrollEnd - scrollStart),
+    behavior,
   })
+}
+
+function continueReading() {
+  const percent = resumePercent.value
+
+  if (percent === null) {
+    return
+  }
+
+  scrollToPercent(percent)
 
   if (currentDoc.value) {
     resumeDismissedIds.value = new Set([...resumeDismissedIds.value, currentDoc.value.id])
@@ -367,22 +385,22 @@ function applyTagFilter(tag: string) {
 }
 
 // ===== B1：文章 AI 总结（逻辑在 useAiSummary 单例，与右上角 AI 胶囊共享状态） =====
-const { aiSummary, aiSummaryState, aiSummaryError, generate: generateAiSummary, dismiss: dismissAiSummary, refresh: refreshAiSummary, restoreFor: restoreAiSummaryFor } = useAiSummary()
+const { aiSummary, aiSummaryState, aiSummaryError, aiSummaryCollapsed, generate: generateAiSummary, dismiss: dismissAiSummary, expand: expandAiSummary, refresh: refreshAiSummary, restoreFor: restoreAiSummaryFor } = useAiSummary()
 
 async function handleLike() {
   const doc = currentDoc.value
 
-  if (!doc || isLiked.value) {
+  if (!doc) {
     return
   }
 
-  try {
-    const likes = await docsStore.likeDoc(doc.id)
-    showToast('感谢点赞！', { type: 'success' })
-    void likes
-  } catch {
-    // 拦截器已提示
-  }
+  // 已赞 → 取消；未赞 → 点赞（乐观更新：UI 先行，请求后台同步）
+  const nextLiked = !isLiked.value
+
+  docsStore.likeDoc(doc.id, nextLiked).catch(() => {
+    // 失败时 store 已回滚状态，拦截器已提示
+  })
+  showToast(nextLiked ? '感谢点赞！' : '已取消点赞', { type: nextLiked ? 'success' : 'info' })
 }
 
 const handleWindowScroll = () => {
@@ -393,20 +411,9 @@ const handleWindowResize = () => {
   void syncHeadings().then(() => update())
 }
 
-watch(
-  () => visibleDocs.value.map((item) => item.id).join(','),
-  (ids) => {
-    if (!ids) {
-      docsStore.setActiveDoc('')
-      return
-    }
-
-    if (!visibleDocs.value.some((item) => item.id === docsStore.activeDocId)) {
-      docsStore.setActiveDoc(visibleDocs.value[0].id)
-    }
-  },
-  { immediate: true },
-)
+// 注意：搜索过滤不回退激活文章。此前"当前文章被过滤掉就切到第一篇"的兜底会与
+// Fuse 全文重索引产生的瞬态结果互相触发，导致上一篇/下一篇被莫名弹回，已移除；
+// 过滤只影响左侧列表，右侧正文始终跟随路由参数。
 
 watch(
   () => currentDoc.value?.id,
@@ -430,6 +437,7 @@ watch(
     }
 
     void nextTick().then(async () => {
+      // 立即回顶（正文尚未切换，容器顶部位置稳定）；正文渲染完成后再兜底一次
       reset({ behavior: 'auto' })
       update()
     })
@@ -439,11 +447,30 @@ watch(
 watch(renderedContent, async () => {
   await syncHeadings()
   update()
+
+  // 新文章正文渲染完成后的兜底回顶：覆盖内容异步到达（挂载时还是骨架屏）的场景
+  if (!pendingTopScroll) {
+    return
+  }
+
+  pendingTopScroll = false
+  reset({ behavior: 'auto' })
 })
 
 onMounted(() => {
   window.addEventListener('scroll', handleWindowScroll, { passive: true })
   window.addEventListener('resize', handleWindowResize)
+
+  // :key=fullPath 让每次切文都重建实例：新实例挂载时路由、正文可能已全部就绪，
+  // 任何 watcher 都等不到"变化"，回顶意图必须在这里消费（内容未就绪时由上方
+  // renderedContent 兜底）。先置 false 再等 nextTick，确保 reset 时容器已挂载。
+  if (pendingTopScroll) {
+    pendingTopScroll = false
+    void nextTick().then(() => {
+      reset({ behavior: 'auto' })
+      update()
+    })
+  }
 
   void docsStore.fetchDocs().then(async () => {
     await nextTick()
@@ -467,10 +494,8 @@ onBeforeUnmount(() => {
   <div class="knowledge-page px-3 pb-16 sm:px-6 sm:pb-20">
     <ProgressBar :percentage="progress" />
 
-    <div class="mx-auto max-w-screen-xl 2xl:max-w-screen-2xl">
-      <section
-        class="knowledge-hero mb-6 rounded-[1.75rem] border border-slate-200 bg-white px-4 py-6 shadow-sm sm:px-8 sm:py-8"
-      >
+    <div class="mx-auto max-w-screen-2xl 2xl:max-w-[1760px]">
+      <section class="knowledge-hero mb-6 px-4 sm:px-6">
         <div class="flex flex-wrap items-end justify-between gap-6">
           <div class="max-w-3xl">
             <p class="app-overline text-xs uppercase tracking-[0.32em]">知识库</p>
@@ -482,7 +507,7 @@ onBeforeUnmount(() => {
             </p>
           </div>
 
-          <div class="knowledge-hero-meta w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 text-sm shadow-sm sm:w-auto">
+          <div class="knowledge-hero-meta w-full text-sm sm:w-auto">
             <p class="knowledge-hero-meta-label text-slate-500">最近同步</p>
             <p class="knowledge-hero-meta-value mt-2 text-lg font-semibold text-slate-800">{{ syncLabel }}</p>
             <p class="knowledge-hero-meta-copy mt-1 max-w-56 truncate text-xs text-slate-500">
@@ -514,7 +539,7 @@ onBeforeUnmount(() => {
         <div class="min-w-0 flex-1">
           <article
             ref="articleContainerRef"
-            class="knowledge-content-card w-full max-w-5xl rounded-[1.75rem] border border-slate-200 bg-white px-4 py-6 shadow-sm sm:px-8 sm:py-10 lg:px-10"
+            class="knowledge-content-card w-full rounded-[1.75rem] border border-slate-200 bg-white px-4 py-6 shadow-sm sm:px-8 sm:py-10 lg:px-10"
           >
             <template v-if="currentDoc">
               <header class="knowledge-content-header mb-8 border-b border-slate-200 pb-6 sm:mb-10 sm:pb-8">
@@ -537,13 +562,12 @@ onBeforeUnmount(() => {
                     <button
                       v-if="typeof currentDoc.likes === 'number'"
                       type="button"
-                      class="knowledge-like-btn inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition"
+                      class="knowledge-like-btn inline-flex items-center gap-1 p-1 text-xs font-medium transition"
                       :class="{ 'is-liked': isLiked }"
-                      :disabled="isLiked"
-                      :title="isLiked ? '已点赞' : '点赞支持'"
+                      :title="isLiked ? '已点赞，点击取消' : '点赞支持'"
                       @click="handleLike"
                     >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                         <path d="M7 10v12" />
                         <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
                       </svg>
@@ -552,18 +576,19 @@ onBeforeUnmount(() => {
 
                     <button
                       type="button"
-                      class="knowledge-star-btn inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition"
+                      class="knowledge-star-btn inline-flex items-center gap-1 p-1 text-xs font-medium transition"
                       :class="{ 'is-starred': isStarred }"
                       :title="isStarred ? '取消收藏' : '收藏本文'"
                       @click="handleStar"
                     >
-                      <svg viewBox="0 0 24 24" :fill="isStarred ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" :fill="isStarred ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                       </svg>
-                      <span>{{ isStarred ? '已收藏' : '收藏' }}</span>
                     </button>
                   </div>
 
+                  <!-- AI 总结 + 导出为一组，靠右相邻排列（此前 justify-between 把两者拆开显得割裂） -->
+                  <div class="flex items-center gap-2">
                   <button
                     type="button"
                     class="knowledge-export-trigger inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-white hover:text-slate-900"
@@ -630,6 +655,7 @@ onBeforeUnmount(() => {
                         </button>
                       </div>
                     </Transition>
+                  </div>
                   </div>
                 </div>
 
@@ -698,23 +724,25 @@ onBeforeUnmount(() => {
                     <button
                       type="button"
                       class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500 transition hover:text-slate-900"
-                      @click="dismissAiSummary"
+                      @click="aiSummaryCollapsed ? expandAiSummary() : dismissAiSummary()"
                     >
-                      收起
+                      {{ aiSummaryCollapsed ? '展开' : '收起' }}
                     </button>
                   </div>
                 </div>
 
-                <p v-if="aiSummaryError" class="mt-3 text-sm leading-6 text-rose-500">{{ aiSummaryError }}</p>
+                <div v-show="!aiSummaryCollapsed">
+                  <p v-if="aiSummaryError" class="mt-3 text-sm leading-6 text-rose-500">{{ aiSummaryError }}</p>
 
-                <p v-else class="ai-summary-content mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
-                  {{ aiSummary }}<span v-if="aiSummaryState === 'loading'" class="ai-summary-cursor" aria-hidden="true">▍</span>
-                </p>
+                  <p v-else class="ai-summary-content mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
+                    {{ aiSummary }}<span v-if="aiSummaryState === 'loading'" class="ai-summary-cursor" aria-hidden="true">▍</span>
+                  </p>
 
-                <p class="mt-3 text-[11px] leading-4 text-slate-400">由 AI 生成，仅供参考；同一个会话内切换文章会保留各自的摘要。</p>
+                  <p class="mt-3 text-[11px] leading-4 text-slate-400">由 AI 生成，仅供参考；同一个会话内切换文章会保留各自的摘要。</p>
+                </div>
               </div>
 
-              <div v-if="tocItems.length" class="doc-toc-inline mb-8 rounded-2xl border border-slate-200 bg-slate-50 2xl:hidden">
+              <div v-if="tocItems.length" class="doc-toc-inline mb-8 rounded-2xl border border-slate-200 bg-slate-50 xl:hidden">
                 <button
                   type="button"
                   class="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-slate-700"
@@ -736,7 +764,7 @@ onBeforeUnmount(() => {
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
-                <div v-show="isTocOpen" class="max-h-72 overflow-y-auto px-4 pb-4">
+                <div v-show="isTocOpen" class="doc-toc-inline-scroll max-h-72 overflow-y-auto px-4 pb-4">
                   <DocToc :items="tocItems" :active-id="activeHeadingId" @jump="handleTocJump" />
                 </div>
               </div>
@@ -767,10 +795,13 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- 外层占满整列高度（self-stretch），内层卡片 sticky：粘性空间=整篇文章高度，滚到底也不撞出视口 -->
-        <aside v-if="tocItems.length" class="hidden 2xl:block w-56 flex-none 2xl:self-stretch">
-          <div class="doc-toc-aside 2xl:sticky 2xl:top-24">
+        <!-- 目录双形态：xl（1280px）起右侧粘性常驻（滚动区高度跟随视口，接近页面高度），以下收进文章上方折叠条 -->
+        <aside v-if="tocItems.length" class="hidden xl:block w-56 flex-none xl:self-stretch">
+          <!-- 高度与左侧（文档列表+最近阅读）对齐：max-h 同为 100vh-7rem，内容多时到上限、
+               内容少时随内容收缩（固定 h 会在 sticky 未吸顶时底部超出视口被裁） -->
+          <div class="doc-toc-aside xl:sticky xl:top-24 xl:flex xl:max-h-[calc(100vh-7rem)] xl:flex-col">
             <p class="doc-toc-heading">目录</p>
-            <div class="doc-toc-aside-scroll mt-3 max-h-[60vh] overflow-y-auto pr-1">
+            <div class="doc-toc-aside-scroll mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
               <DocToc :items="tocItems" :active-id="activeHeadingId" @jump="handleTocJump" />
             </div>
           </div>
