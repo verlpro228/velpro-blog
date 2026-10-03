@@ -68,7 +68,8 @@ function formatTime(timestamp: number) {
       </div>
     </div>
 
-    <div class="knowledge-reading-list mt-3 max-h-44 space-y-1 overflow-y-auto">
+    <!-- 固定只显示 2 条（约 72px），更多记录在卡片内上下滚动查看 -->
+    <div class="knowledge-reading-list mt-3 max-h-[72px] space-y-1 overflow-y-auto">
       <button
         v-for="item in items"
         :key="item.id"

@@ -206,7 +206,9 @@ const restoreDraft = (storageKey: string) => {
 const openCreateDialog = () => {
   resetForm()
   uploadedImages.value = []
-  restoreDraft(`${STORAGE_KEYS.editorDraft}:new`)
+  // 新增即全新空白：丢弃上次未保存的新增草稿，避免打开弹窗看到上次的内容
+  removeLocalStorage(`${STORAGE_KEYS.editorDraft}:new`)
+  draftSavedAt.value = ''
   isEditMode.value = false
   dialogVisible.value = true
   syncSnapshot()

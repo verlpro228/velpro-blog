@@ -437,7 +437,7 @@ onBeforeUnmount(() => {
 .ai-assistant__prompt-bubble {
   position: absolute;
   right: 0;
-  bottom: calc(100% + 12px);
+  bottom: calc(100% + 6px);
   min-width: 188px;
   max-width: 228px;
   padding: 12px 14px;
@@ -479,24 +479,7 @@ onBeforeUnmount(() => {
   left: 0;
 }
 
-.ai-assistant__prompt-bubble::after {
-  content: '';
-  position: absolute;
-  right: 28px;
-  bottom: -8px;
-  height: 16px;
-  width: 16px;
-  /* 小尾巴用接近实底的近似色衔接气泡底边，避免玻璃模糊在角上双重叠加 */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.86));
-  border-right: 1px solid rgba(255, 255, 255, 0.62);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.62);
-  transform: rotate(45deg);
-}
-
-:root.theme-dark .ai-assistant__prompt-bubble::after {
-  background: linear-gradient(135deg, rgba(42, 60, 92, 0.95), rgba(22, 34, 58, 0.92));
-  border-color: rgba(148, 197, 255, 0.18);
-}
+/* 无尾巴：气泡悬浮于球体上方即可 */
 
 /* 左侧停靠时小尾巴同步换到左下角 */
 .ai-assistant.is-left .ai-assistant__prompt-bubble::after {
