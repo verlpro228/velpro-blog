@@ -62,9 +62,7 @@ function openDoc(docId: string) {
 <template>
   <div class="archive-page px-3 pb-16 sm:px-6 sm:pb-20">
     <div class="mx-auto max-w-screen-xl">
-      <section
-        class="archive-hero mb-6 rounded-[1.75rem] border border-slate-200 bg-white px-4 py-6 shadow-sm sm:px-8 sm:py-8"
-      >
+      <section class="archive-hero mb-6 px-4 sm:px-6">
         <p class="app-overline text-xs uppercase tracking-[0.32em]">文档归档</p>
         <h1 class="archive-hero-title mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.8rem]">
           时间线里的每一篇沉淀

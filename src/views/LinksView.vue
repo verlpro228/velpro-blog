@@ -5,9 +5,7 @@ import { FRIEND_LINKS, FRIEND_LINK_REQUIREMENTS } from '@/constants/links'
 <template>
   <div class="links-page px-3 pb-16 sm:px-6 sm:pb-20">
     <div class="mx-auto max-w-screen-xl">
-      <section
-        class="links-hero mb-6 rounded-[1.75rem] border border-slate-200 bg-white px-4 py-6 shadow-sm sm:px-8 sm:py-8"
-      >
+      <section class="links-hero mb-6 px-4 sm:px-6">
         <p class="app-overline text-xs uppercase tracking-[0.32em]">友情链接</p>
         <h1 class="links-hero-title mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.8rem]">
           一路上的其他站点
