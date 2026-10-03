@@ -194,6 +194,10 @@ onMounted(async () => {
 
     <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <template v-if="loading">
+        <div class="app-spinner-label col-span-full justify-center py-1">
+          <span class="app-spinner app-spinner--lg" aria-hidden="true" />
+          <span>数据加载中…</span>
+        </div>
         <div v-for="index in 5" :key="index" class="app-card rounded-[1.5rem] px-5 py-4">
           <el-skeleton-item variant="text" style="width: 64px; height: 14px" />
           <el-skeleton-item class="mt-3 block" variant="h3" style="width: 88px; height: 32px" />

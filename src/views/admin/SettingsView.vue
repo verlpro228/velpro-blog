@@ -36,7 +36,12 @@ const syncProfileForm = () => {
   profileForm.tagline = userStore.profile?.tagline ?? ''
 }
 
+// 初始资料拉取状态：未加载完前表单区显示旋转遮罩，避免空白表单显得死板
+const profileLoading = ref(false)
+
 onMounted(async () => {
+  profileLoading.value = true
+
   try {
     const profile = await getProfileApi()
     userStore.setProfile(profile)
@@ -45,6 +50,7 @@ onMounted(async () => {
   }
 
   syncProfileForm()
+  profileLoading.value = false
 })
 
 const handleSaveProfile = async () => {
@@ -123,7 +129,7 @@ const handleUpdatePassword = async () => {
 </script>
 
 <template>
-  <div class="grid gap-6 p-4 sm:p-8 xl:grid-cols-2">
+  <div v-loading="profileLoading" class="grid gap-6 p-4 sm:p-8 xl:grid-cols-2">
     <section class="app-panel rounded-[2rem] p-6 sm:p-8">
       <p class="app-overline text-xs uppercase tracking-[0.28em]">个人信息</p>
       <h2 class="app-heading mt-2 text-xl font-semibold">资料设置</h2>

@@ -456,7 +456,10 @@ onBeforeUnmount(() => {
     <div class="mb-6 grid gap-4 md:grid-cols-3">
       <div class="app-card rounded-[1.5rem] px-5 py-4">
         <p class="app-caption text-sm">文档数量</p>
-        <p class="app-heading mt-3 text-3xl font-semibold">{{ docsStore.docs.length }}</p>
+        <p class="app-heading mt-3 flex h-9 items-center text-3xl font-semibold">
+          <span v-if="docsStore.loading" class="app-spinner" aria-label="加载中" />
+          <template v-else>{{ docsStore.docs.length }}</template>
+        </p>
       </div>
       <div class="app-card rounded-[1.5rem] px-5 py-4">
         <p class="app-caption text-sm">当前文档</p>
@@ -466,13 +469,16 @@ onBeforeUnmount(() => {
       </div>
       <div class="app-card rounded-[1.5rem] px-5 py-4">
         <p class="app-caption text-sm">最近同步</p>
-        <p class="app-heading mt-3 text-sm font-semibold">{{ syncLabel }}</p>
+        <p class="app-heading mt-3 flex h-6 items-center text-sm font-semibold">
+          <span v-if="docsStore.loading" class="app-spinner" aria-label="加载中" />
+          <template v-else>{{ syncLabel }}</template>
+        </p>
       </div>
     </div>
 
     <div class="app-panel-strong rounded-[1.75rem] p-4 sm:p-5">
-      <div class="overflow-x-auto">
-        <el-table :data="docsStore.docs" :loading="docsStore.loading" stripe style="min-width: 1020px">
+      <div v-loading="docsStore.loading" class="overflow-x-auto" :style="{ minHeight: docsStore.loading ? '320px' : undefined }">
+        <el-table :data="docsStore.docs" stripe style="min-width: 1020px">
         <el-table-column prop="title" label="标题" min-width="220" />
         <el-table-column prop="summary" label="简介" min-width="260" show-overflow-tooltip />
         <el-table-column label="标签" min-width="200">

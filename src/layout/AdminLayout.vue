@@ -6,11 +6,13 @@ import { ADMIN_NAVIGATION_ITEMS } from '@/constants/app'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { useDocsStore } from '@/store/modules/docs'
+import { useProjectsStore } from '@/store/modules/projects'
 import { useUserStore } from '@/store/modules/user'
 
 const route = useRoute()
 const router = useRouter()
 const docsStore = useDocsStore()
+const projectsStore = useProjectsStore()
 const userStore = useUserStore()
 const { logout } = useAuth()
 const { isDark, toggleTheme } = useTheme()
@@ -21,6 +23,9 @@ const currentTitle = computed(() =>
 
 const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '切换深色模式'))
 const themeIcon = computed(() => (isDark.value ? Sunny : MoonNight))
+
+// 后台全局数据加载指示：任一核心数据源在拉取中即显示旋转效果
+const syncLoading = computed(() => docsStore.loading || projectsStore.adminLoading)
 
 const syncLabel = computed(() => {
   if (!docsStore.lastFetchedAt) {
@@ -76,7 +81,10 @@ const syncLabel = computed(() => {
           <div class="mt-2 flex flex-wrap items-center justify-between gap-4">
             <div class="min-w-0">
               <h1 class="app-heading text-xl font-semibold sm:text-2xl">{{ currentTitle }}</h1>
-              <p class="app-caption mt-2 text-sm">{{ syncLabel }}</p>
+              <p class="app-caption mt-2 flex items-center gap-2 text-sm">
+                <span v-if="syncLoading" class="app-spinner" aria-hidden="true" />
+                <span>{{ syncLoading ? '数据同步中…' : syncLabel }}</span>
+              </p>
             </div>
 
             <el-button circle :aria-label="themeActionLabel" :title="themeActionLabel" @click="toggleTheme">
