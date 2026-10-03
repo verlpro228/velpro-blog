@@ -32,6 +32,7 @@ export const NAVIGATION_ITEMS = [
   { label: '首页', path: '/' },
   { label: '知识库', path: '/knowledge' },
   { label: '归档', path: '/archive' },
+  { label: '统计', path: '/stats' },
   { label: '项目展示', path: '/projects' },
   { label: '关于', path: '/about' },
   { label: '留言板', path: '/guestbook' },

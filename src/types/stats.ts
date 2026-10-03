@@ -29,3 +29,11 @@ export interface DashboardStats {
   tagStats: TagStatItem[]
   monthly: MonthlyPublishItem[]
 }
+
+/** 前台公开统计：口径不含草稿数（内部信息） */
+export interface PublicStats {
+  overview: Omit<DashboardOverview, 'draftCount'>
+  topDocs: TopDocItem[]
+  tagStats: TagStatItem[]
+  monthly: MonthlyPublishItem[]
+}

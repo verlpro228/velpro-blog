@@ -38,6 +38,15 @@ export const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'stats',
+        name: 'stats',
+        component: () => import('@/views/StatsView.vue'),
+        meta: {
+          title: '站点统计',
+          description: '站点数据总览：内容规模、阅读互动、浏览量排行与产出节奏，全部公开透明。',
+        },
+      },
+      {
         path: 'guestbook',
         name: 'guestbook',
         component: () => import('@/views/GuestbookView.vue'),
