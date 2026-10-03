@@ -14,7 +14,7 @@ from backend.app.models import Project, SiteProfile  # noqa: E402
 PROJECTS = [
     {
         "id": "lims-platform",
-        "title": "实验室信息化综合管理平台（LIMS）",
+        "title": "实验室信息化综合管理平台",
         "summary": "面向科研院所、高校及医院的全功能实验室信息化管理平台，覆盖 15+ 核心业务模块，聚焦复杂业务逻辑、实时数据交互与数据可视化。",
         "cover": "",
         "category": "企业级全栈项目",

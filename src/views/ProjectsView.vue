@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from 'vue'
 import Fuse from 'fuse.js'
 import AppDrawer from '@/components/common/AppDrawer.vue'
 import AppEmptyState from '@/components/common/AppEmptyState.vue'
-import SectionTitle from '@/components/common/SectionTitle.vue'
 import { useProjectsStore } from '@/store/modules/projects'
 
 const projectsStore = useProjectsStore()
@@ -59,17 +58,12 @@ const openDetail = (projectId: string) => {
 
 <template>
   <section class="projects-page px-4 pb-12 sm:px-6 sm:pb-16">
-    <div class="mx-auto max-w-7xl">
-      <SectionTitle
-        eyebrow="项目展示"
-        title="持续打磨中的产品与交互实践"
-        description="这里收录了近阶段完成的项目，重点关注内容组织、页面交互、业务流程与工程实现之间的平衡。"
-      />
-
-      <div class="app-card mt-8 grid gap-4 rounded-[1.75rem] p-4 sm:mt-10 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-center">
-        <label class="block">
+    <!-- 搜索 + 分类筛选：整块固定在导航栏下方，与卡片容器同宽，滚动全程可搜索/切换分类 -->
+    <div class="fixed inset-x-0 top-24 z-30 px-4 sm:px-6">
+      <div class="mx-auto max-w-7xl">
+        <label class="mx-auto block w-full max-w-xl">
           <span class="sr-only">搜索项目</span>
-          <div class="app-public-input flex items-center gap-3 rounded-2xl px-4 py-3">
+          <div class="app-public-input flex items-center gap-3 rounded-full px-5 py-3.5 shadow-sm">
             <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8">
               <circle cx="11" cy="11" r="6.5" />
               <path d="m16 16 4.5 4.5" />
@@ -91,7 +85,9 @@ const openDetail = (projectId: string) => {
           </div>
         </label>
 
-        <div class="flex gap-3 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
+        <div
+          class="mt-4 flex gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden"
+        >
           <button
             v-for="item in categories"
             :key="item"
@@ -103,32 +99,39 @@ const openDetail = (projectId: string) => {
           </button>
         </div>
       </div>
+    </div>
 
-      <div class="mt-8 grid gap-5 sm:mt-10 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <!-- 固定筛选条占据头部空间，卡片网格下移让位（mt-40 ≈ 导航栏+筛选条高度） -->
+    <div class="mx-auto max-w-7xl">
+      <div class="mt-40 grid gap-5 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <!-- 卡片各区块定高（标题2行/摘要3行/标签2行/亮点3行），保证所有卡片尺寸统一 -->
         <article
           v-for="project in filteredProjects"
           :key="project.id"
-          class="app-card interactive-card group rounded-[1.75rem] p-5 sm:p-6"
+          class="app-card interactive-card group flex h-full flex-col rounded-[1.75rem] p-5 sm:p-6"
         >
           <div>
             <div>
-              <p class="app-overline text-sm">{{ project.category }}</p>
-              <h3 class="app-heading mt-3 text-xl font-semibold sm:text-2xl">{{ project.title }}</h3>
+              <h3 class="app-heading truncate text-xl font-semibold sm:text-2xl">
+                {{ project.title }}
+              </h3>
             </div>
-            <p class="app-copy mt-4 text-sm leading-7">{{ project.summary }}</p>
+            <p class="app-copy mt-4 line-clamp-3 min-h-[84px] text-sm leading-7">{{ project.summary }}</p>
           </div>
 
-          <div class="mt-5 flex flex-wrap gap-2">
+          <div class="mt-5 flex h-[56px] content-start flex-wrap gap-2 overflow-hidden">
             <span v-for="stack in project.techStacks" :key="stack" class="app-tag-pill px-3 py-1 text-xs">
               {{ stack }}
             </span>
           </div>
 
-          <ul class="app-copy mt-5 space-y-2 text-sm">
-            <li v-for="item in project.highlights" :key="item">{{ item }}</li>
+          <ul class="app-copy mt-5 min-h-[76px] space-y-2 overflow-hidden text-sm">
+            <li v-for="item in project.highlights.slice(0, 3)" :key="item" class="truncate">
+              {{ item }}
+            </li>
           </ul>
 
-          <div class="mt-6">
+          <div class="mt-auto pt-6">
             <button class="app-text-link text-sm font-medium" @click="openDetail(project.id)">
               查看项目详情
             </button>
