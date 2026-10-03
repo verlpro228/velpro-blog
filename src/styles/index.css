@@ -231,6 +231,28 @@ button {
     0 14px 32px rgba(15, 42, 80, 0.12),
     0 4px 12px rgba(15, 42, 80, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 22px 48px rgba(15, 42, 80, 0.18),
+    0 8px 20px rgba(15, 42, 80, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+/* hover 时卡片眉标（核心能力 / Step N）点染主色，与整卡反馈联动 */
+.glass-card:hover .app-overline {
+  color: var(--color-primary);
+}
+
+.app-card .app-overline {
+  transition: color 0.3s ease;
 }
 
 :root.theme-dark .glass-card {
@@ -240,6 +262,14 @@ button {
     0 18px 40px rgba(2, 6, 23, 0.5),
     0 6px 16px rgba(2, 6, 23, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:root.theme-dark .glass-card:hover {
+  border-color: rgba(148, 197, 255, 0.3);
+  box-shadow:
+    0 22px 48px rgba(2, 6, 23, 0.6),
+    0 8px 20px rgba(2, 6, 23, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 /* 数据加载中的旋转指示器：后台全局/卡片内通用，配 .app-spinner-label 形成组合 */
@@ -550,7 +580,8 @@ button {
   transition:
     border-color 0.3s ease,
     background-color 0.3s ease,
-    box-shadow 0.3s ease;
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
   will-change: transform;
 }
 
@@ -571,6 +602,7 @@ button {
 
 /* 知识库侧栏与目录共用的细滚动条 */
 .knowledge-doc-list,
+.about-aside-scroll,
 .doc-toc-aside-scroll,
 .doc-toc-inline-scroll {
   scrollbar-width: thin;

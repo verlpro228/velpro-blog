@@ -10,7 +10,6 @@ const HomeStorySection = defineAsyncComponent(() => import('@/components/home/Ho
 
 const pageRef = ref<HTMLElement | null>(null)
 const showDeferredSections = ref(false)
-const hoverCleanups: Array<() => void> = []
 const preferredReducedMotion = usePreferredReducedMotion()
 const { width } = useWindowSize()
 const { gsap, ScrollTrigger } = useGsap()
@@ -19,43 +18,6 @@ const { fadeInUp, staggerReveal, createParallax } = useScrollAnimation()
 const contexts: Array<ReturnType<typeof gsap.context>> = []
 let idleHandle: number | null = null
 let timeoutHandle: ReturnType<typeof setTimeout> | null = null
-
-const cleanupHoverLift = () => {
-  hoverCleanups.forEach((cleanup) => cleanup())
-  hoverCleanups.length = 0
-}
-
-const bindHoverLift = (targets: HTMLElement[]) => {
-  cleanupHoverLift()
-
-  targets.forEach((target) => {
-    const enter = () => {
-      gsap.to(target, {
-        y: -10,
-        scale: 1.02,
-        duration: 0.35,
-        ease: 'power3.out',
-      })
-    }
-
-    const leave = () => {
-      gsap.to(target, {
-        y: 0,
-        scale: 1,
-        duration: 0.4,
-        ease: 'power3.out',
-      })
-    }
-
-    target.addEventListener('mouseenter', enter)
-    target.addEventListener('mouseleave', leave)
-
-    hoverCleanups.push(() => {
-      target.removeEventListener('mouseenter', enter)
-      target.removeEventListener('mouseleave', leave)
-    })
-  })
-}
 
 const runHeroAnimations = () => {
   if (!pageRef.value || preferredReducedMotion.value === 'reduce') {
@@ -94,6 +56,8 @@ const runHeroAnimations = () => {
           opacity: 0,
           duration: 0.55,
           stagger: 0.06,
+          // 清除内联 transform，避免盖住卡片自身的 CSS :hover 位移
+          clearProps: 'transform',
         },
         '-=0.4',
       )
@@ -141,10 +105,6 @@ const runDeferredAnimations = () => {
     gsap.utils.toArray<HTMLElement>('.scroll-reveal').forEach((item:any) => {
       fadeInUp(item, item)
     })
-
-    if (width.value >= 768) {
-      bindHoverLift(gsap.utils.toArray<HTMLElement>('.interactive-card'))
-    }
   }, pageRef.value)
 
   contexts.push(context)
@@ -185,7 +145,6 @@ onUnmounted(() => {
   }
 
   contexts.forEach((context) => context.revert())
-  cleanupHoverLift()
 })
 </script>
 

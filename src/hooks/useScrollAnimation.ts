@@ -15,6 +15,8 @@ export function useScrollAnimation() {
         duration: 0.9,
         ease: 'power3.out',
         stagger: 0.12,
+        // 入场结束清除内联 transform，否则会盖住卡片的 CSS :hover 位移
+        clearProps: 'transform',
         scrollTrigger: {
           trigger: trigger ?? targets,
           start: 'top 80%',
@@ -35,6 +37,7 @@ export function useScrollAnimation() {
       duration: 0.9,
       ease: 'power3.out',
       stagger: 0.12,
+      clearProps: 'transform',
       scrollTrigger: {
         trigger: trigger ?? targets,
         start: 'top 78%',

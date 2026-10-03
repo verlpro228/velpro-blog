@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useDocsStore } from "@/store/modules/docs";
 import { useProjectsStore } from "@/store/modules/projects";
@@ -83,7 +83,41 @@ onMounted(() => {
   if (!projectsStore.initialized) {
     void projectsStore.fetchProjects();
   }
+
+  void fetchHitokoto();
 });
+
+// ===== 一言卡片：hitokoto 免费接口（文学/诗词/哲学分类），失败静默降级为内置语录 =====
+const hitokoto = ref({ text: "", from: "" });
+const hitokotoLoading = ref(false);
+const FALLBACK_QUOTE = { text: "把每一件简单的事做好，就是不简单。", from: "站点寄语" };
+
+async function fetchHitokoto() {
+  hitokotoLoading.value = true;
+
+  try {
+    const response = await fetch("https://v1.hitokoto.cn/?c=d&c=i&c=k&max_length=36");
+    if (!response.ok) {
+      throw new Error(`hitokoto ${response.status}`);
+    }
+
+    const data = await response.json();
+    hitokoto.value = {
+      text: data.hitokoto,
+      // 作者与出处相同（如"冯骥才「冯骥才」"）时只显示一处
+      from: data.from_who
+        ? data.from_who === data.from
+          ? data.from_who
+          : `${data.from_who}「${data.from}」`
+        : `「${data.from}」`,
+    };
+  } catch {
+    // 接口不可达/超时时用内置语录兜底，卡片不缺席
+    hitokoto.value = { text: FALLBACK_QUOTE.text, from: FALLBACK_QUOTE.from };
+  } finally {
+    hitokotoLoading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -149,8 +183,60 @@ onMounted(() => {
           </RouterLink>
         </div>
 
+        <!-- 一言卡片：hitokoto 接口 + 玻璃质感，点击刷新换一句 -->
+        <figure class="hero-quote glass-card mt-8 max-w-xl rounded-[1.5rem] px-5 py-4 sm:mt-10">
+          <div class="flex items-start gap-3">
+            <svg
+              class="hero-quote-mark h-5 w-5 shrink-0"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M9.5 8C7 8 5 10 5 12.5S7 17 9.5 17c.3 0 .7 0 1-.1-.6 1.3-1.9 2.3-3.5 2.6v2c3.9-.4 7-3.7 7-7.6V12C14 9.8 12 8 9.5 8Zm9 0C16 8 14 10 14 12.5S16 17 18.5 17c.3 0 .7 0 1-.1-.6 1.3-1.9 2.3-3.5 2.6v2c3.9-.4 7-3.7 7-7.6V12C23 9.8 21 8 18.5 8Z" />
+            </svg>
+
+            <Transition name="quote-fade" mode="out-in">
+              <blockquote
+                :key="hitokoto.text"
+                class="min-w-0 flex-1"
+              >
+                <p class="hero-quote-text m-0 text-sm font-medium leading-6 sm:text-base sm:leading-7">
+                  {{ hitokoto.text || "…" }}
+                </p>
+                <figcaption class="hero-quote-from mt-2 text-xs">
+                  {{ hitokoto.from }}
+                </figcaption>
+              </blockquote>
+            </Transition>
+
+            <button
+              type="button"
+              class="hero-quote-refresh mt-0.5 shrink-0 rounded-full p-1.5 transition hover:rotate-90"
+              :disabled="hitokotoLoading"
+              title="换一句"
+              aria-label="换一句"
+              @click="fetchHitokoto"
+            >
+              <svg
+                class="h-3.5 w-3.5"
+                :class="{ 'animate-spin': hitokotoLoading }"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                <polyline points="21 3 21 9 15 9" />
+              </svg>
+            </button>
+          </div>
+        </figure>
+
         <div
-          class="hero-copy mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2 md:grid-cols-3"
+          class="hero-copy mt-8 grid gap-4 sm:mt-10 sm:grid-cols-2 md:grid-cols-3"
         >
           <div
             v-for="metric in heroMetrics"
@@ -257,6 +343,117 @@ onMounted(() => {
   box-shadow:
     0 12px 28px rgba(2, 6, 23, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 一言卡片：玻璃卡上的文字排版与刷新交互 */
+.hero-quote {
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.hero-quote:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 22px 48px rgba(15, 42, 80, 0.18),
+    0 8px 20px rgba(15, 42, 80, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.hero-quote:hover .hero-quote-mark {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.hero-quote-mark {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.hero-quote-text {
+  color: var(--color-text-strong);
+}
+
+.hero-quote-from {
+  color: var(--color-text-subtle);
+}
+
+.hero-quote-mark {
+  color: var(--color-primary);
+  opacity: 0.7;
+}
+
+.hero-quote-refresh {
+  color: var(--color-text-subtle);
+}
+
+.hero-quote-refresh:hover {
+  color: var(--color-primary);
+}
+
+.hero-quote-refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 技术标签：hover 轻浮 + 主色描边反馈 */
+.hero-chip {
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.hero-chip:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  color: var(--color-primary);
+}
+
+/* 统计卡：hover 上浮 + 数字点染主色，与玻璃卡 hover 语言一致 */
+.hero-metric {
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.hero-metric:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 22px 48px rgba(15, 42, 80, 0.18),
+    0 8px 20px rgba(15, 42, 80, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.hero-metric .app-heading {
+  transition: color 0.3s ease;
+}
+
+.hero-metric:hover .app-heading {
+  color: var(--color-primary);
+}
+
+.quote-fade-enter-active,
+.quote-fade-leave-active {
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+}
+
+.quote-fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.quote-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 
 /* 统计卡：液态玻璃——半透明渐变底 + 背景模糊 + 内高光，压住 app-card 的实底样式 */

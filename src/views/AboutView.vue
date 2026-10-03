@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useProjectsStore } from '@/store/modules/projects'
 import { useSiteProfileStore } from '@/store/modules/profile'
 
@@ -34,13 +34,63 @@ onMounted(() => {
   projectsStore.fetchProjects()
   profileStore.fetchProfile()
 })
+
+// ===== 右侧悬浮锚点菜单：定位到右栏各内容区块，滚动时高亮当前区块 =====
+const ABOUT_SECTIONS = [
+  { id: 'about-skills', label: '专业技能' },
+  { id: 'about-experience', label: '工作经验' },
+  { id: 'about-projects', label: '项目经验' },
+  { id: 'about-education', label: '教育背景' },
+  { id: 'about-growth', label: '成长路径' },
+]
+
+const activeSection = ref(ABOUT_SECTIONS[0].id)
+let rafHandle = 0
+
+// 滚动监听计算当前区块：取"最后一个滚过导航栏下沿（top<=160）"的区块，比 IntersectionObserver
+// 对数据加载引起的布局变化更稳定
+function updateActiveSection() {
+  rafHandle = 0
+
+  let current = ABOUT_SECTIONS[0].id
+  for (const section of ABOUT_SECTIONS) {
+    const el = document.getElementById(section.id)
+    if (el && el.getBoundingClientRect().top <= 160) {
+      current = section.id
+    }
+  }
+  activeSection.value = current
+}
+
+function scheduleUpdate() {
+  if (!rafHandle) {
+    rafHandle = requestAnimationFrame(updateActiveSection)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', scheduleUpdate, { passive: true })
+  scheduleUpdate()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', scheduleUpdate)
+  if (rafHandle) {
+    cancelAnimationFrame(rafHandle)
+  }
+})
+
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 </script>
 
 <template>
   <section class="about-page px-4 pb-12 sm:px-6 sm:pb-16">
     <div class="mx-auto max-w-7xl">
       <div class="grid gap-6 xl:grid-cols-[minmax(280px,0.32fr)_minmax(0,0.68fr)]">
-        <aside class="self-start space-y-6 xl:sticky xl:top-6">
+        <!-- 左栏固定在视口内，内容超高时在左栏内部独立滚动，不随右侧主内容滚走 -->
+        <aside class="about-aside-scroll self-start space-y-6 xl:sticky xl:top-24 xl:h-[calc(100vh-7rem)] xl:overflow-y-auto xl:pr-1">
           <section class="app-card rounded-[1.75rem] p-5 sm:p-7">
             <p class="app-overline text-xs uppercase tracking-[0.32em]">在线简历</p>
             <h1 class="app-heading mt-4 text-3xl font-semibold sm:text-4xl">{{ profile.name }}</h1>
@@ -81,7 +131,7 @@ onMounted(() => {
         </aside>
 
         <div class="space-y-6">
-          <section v-if="skillDetails" class="app-card rounded-[1.75rem] p-5 sm:p-7">
+          <section id="about-skills" v-if="skillDetails" class="about-section app-card rounded-[1.75rem] p-5 sm:p-7">
             <div class="mb-6">
               <p class="app-overline text-xs uppercase tracking-[0.28em]">专业技能</p>
               <h2 class="app-heading mt-3 text-2xl font-semibold">专业技能</h2>
@@ -91,7 +141,7 @@ onMounted(() => {
             </div>
           </section>
 
-          <section v-if="experiences.length" class="app-card rounded-[1.75rem] p-5 sm:p-7">
+          <section id="about-experience" v-if="experiences.length" class="about-section app-card rounded-[1.75rem] p-5 sm:p-7">
             <p class="app-overline text-xs uppercase tracking-[0.28em]">工作经验</p>
             <h2 class="app-heading mt-3 text-2xl font-semibold">工作经验</h2>
             <div class="mt-6 space-y-4">
@@ -112,7 +162,7 @@ onMounted(() => {
             </div>
           </section>
 
-          <section class="app-card rounded-[1.75rem] p-5 sm:p-7">
+          <section id="about-projects" class="about-section app-card rounded-[1.75rem] p-5 sm:p-7">
             <div class="mb-6">
               <p class="app-overline text-xs uppercase tracking-[0.28em]">项目经验</p>
               <h2 class="app-heading mt-3 text-2xl font-semibold">项目经验</h2>
@@ -142,7 +192,7 @@ onMounted(() => {
             </div>
           </section>
 
-          <section class="app-card rounded-[1.75rem] p-5 sm:p-7">
+          <section id="about-education" class="about-section app-card rounded-[1.75rem] p-5 sm:p-7">
             <p class="app-overline text-xs uppercase tracking-[0.28em]">教育背景</p>
             <h2 class="app-heading mt-3 text-2xl font-semibold">教育背景</h2>
             <div class="mt-6 space-y-4">
@@ -163,7 +213,7 @@ onMounted(() => {
             </div>
           </section>
 
-          <section class="app-card rounded-[1.75rem] p-5 sm:p-7">
+          <section id="about-growth" class="about-section app-card rounded-[1.75rem] p-5 sm:p-7">
             <p class="app-overline text-xs uppercase tracking-[0.28em]">成长路径</p>
             <h2 class="app-heading mt-3 text-2xl font-semibold">技术成长路径</h2>
             <div class="resume-timeline mt-6">
@@ -180,10 +230,67 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- 右侧悬浮锚点菜单：定位查看介绍的不同部分（小屏隐藏） -->
+    <nav class="about-anchor-nav hidden xl:fixed xl:right-10 xl:top-1/2 xl:z-40 xl:block xl:-translate-y-1/2" aria-label="页面部分导航">
+      <!-- 容器无内距无缝隙：五个菜单项完全填满，激活高亮条即唯一背景 -->
+      <div class="about-anchor-list flex flex-col overflow-hidden rounded-full border backdrop-blur">
+        <button
+          v-for="section in ABOUT_SECTIONS"
+          :key="section.id"
+          type="button"
+          class="about-anchor-item w-full px-2 py-2 text-[11px] font-medium transition"
+          :class="{ 'is-active': activeSection === section.id }"
+          :title="section.label"
+          @click="scrollToSection(section.id)"
+        >
+          {{ section.label }}
+        </button>
+      </div>
+    </nav>
   </section>
 </template>
 
 <style scoped>
+/* 锚点定位留出固定导航栏高度，避免标题被盖 */
+.about-section {
+  scroll-margin-top: 6.5rem;
+}
+
+/* 右侧悬浮锚点菜单：液态玻璃胶囊，激活项主色高亮 */
+.about-anchor-list {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.36));
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  box-shadow:
+    0 14px 32px rgba(15, 42, 80, 0.12),
+    0 4px 12px rgba(15, 42, 80, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root.theme-dark .about-anchor-list {
+  border-color: rgba(148, 197, 255, 0.14);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  box-shadow:
+    0 18px 40px rgba(2, 6, 23, 0.5),
+    0 6px 16px rgba(2, 6, 23, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.about-anchor-item {
+  color: var(--color-text-muted);
+}
+
+.about-anchor-item:hover {
+  color: var(--color-primary);
+}
+
+.about-anchor-item.is-active {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+}
+
 .resume-side-card {
   border: 1px solid var(--color-border);
   background: var(--color-surface-strong);
