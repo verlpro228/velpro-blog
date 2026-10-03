@@ -8,6 +8,8 @@ export type AiSummaryState = 'idle' | 'loading' | 'done' | 'error'
 const aiSummary = ref('')
 const aiSummaryState = ref<AiSummaryState>('idle')
 const aiSummaryError = ref('')
+// 收起=折叠而非销毁：保留已生成的摘要，随时可再次展开
+const aiSummaryCollapsed = ref(false)
 const aiSummaryCache = new Map<string, string>()
 let aiSummaryAbort: AbortController | null = null
 
@@ -30,6 +32,7 @@ export function useAiSummary() {
     aiSummary.value = ''
     aiSummaryError.value = ''
     aiSummaryState.value = 'loading'
+    aiSummaryCollapsed.value = false
 
     try {
       await streamLongcatChatCompletion({
@@ -67,18 +70,24 @@ export function useAiSummary() {
   }
 
   function dismiss() {
-    aiSummaryAbort?.abort()
-    aiSummaryState.value = 'idle'
+    // 收起摘要卡（不销毁内容、不打断后台生成），可随时再展开
+    aiSummaryCollapsed.value = true
+  }
+
+  function expand() {
+    aiSummaryCollapsed.value = false
   }
 
   function refresh(doc: Pick<KnowledgeDoc, 'id' | 'title' | 'content'>) {
     aiSummaryCache.delete(doc.id)
+    aiSummaryCollapsed.value = false
     void generate(doc)
   }
 
   // 切换文档时调用：终止进行中的请求，恢复目标文档的已有摘要（无则回到 idle）
   function restoreFor(docId: string | undefined) {
     aiSummaryAbort?.abort()
+    aiSummaryCollapsed.value = false
     const cached = docId ? aiSummaryCache.get(docId) : undefined
 
     if (cached) {
@@ -114,8 +123,10 @@ export function useAiSummary() {
     aiSummary,
     aiSummaryState,
     aiSummaryError,
+    aiSummaryCollapsed,
     generate,
     dismiss,
+    expand,
     refresh,
     restoreFor,
     copySummary,

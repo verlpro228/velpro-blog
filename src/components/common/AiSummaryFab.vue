@@ -1,20 +1,83 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { onClickOutside } from '@vueuse/core'
+import { onClickOutside, useEventListener } from '@vueuse/core'
+import { STORAGE_KEYS } from '@/constants/app'
 import { showToast } from '@/utils/toast'
 import { useAiSummary } from '@/hooks/useAiSummary'
+import { useDraggableFab } from '@/hooks/useDraggableFab'
 import { useDocsStore } from '@/store/modules/docs'
 
 const route = useRoute()
 const docsStore = useDocsStore()
 
-const { aiSummary, aiSummaryState, aiSummaryError, generate, dismiss, refresh, copySummary } = useAiSummary()
+const { aiSummary, aiSummaryState, aiSummaryError, generate, refresh, copySummary } = useAiSummary()
 
 const isOpen = ref(false)
 const fabRef = ref<HTMLElement | null>(null)
 
+// 悬浮按钮可拖拽：位置记忆 + 左右磁吸停靠；下拉面板随停靠方向自动换边
+const {
+  side: fabSide,
+  dragging: fabDragging,
+  style: fabStyle,
+  onPointerDown: onFabPointerDown,
+  onClickCapture: onFabClickCapture,
+} = useDraggableFab(
+  { storageKey: STORAGE_KEYS.aiSummaryFabPos, defaultAnchor: { right: 16, bottom: -132 } },
+  fabRef,
+)
+
 const currentDoc = computed(() => docsStore.currentDoc)
+
+// 下拉面板展开方向自适应：球被拖到屏幕下半部时固定向下展开会整体溢出视口（只剩一点，
+// 用户需把球往外拖才能看到）。展开/窗口变化/拖拽结束时按球的视口位置决定向上还是向下弹，
+// 并把面板 max-height 夹紧到所在侧的可用空间内
+const dropUp = ref(false)
+const panelMaxHeight = ref<number | null>(null)
+
+const PANEL_GAP_PX = 10
+const PANEL_MAX_PX = 520
+const VIEWPORT_MARGIN_PX = 12
+
+function updatePanelPlacement() {
+  const el = fabRef.value
+  if (!el) {
+    return
+  }
+
+  const rect = el.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom - PANEL_GAP_PX - VIEWPORT_MARGIN_PX
+  const spaceAbove = rect.top - PANEL_GAP_PX - VIEWPORT_MARGIN_PX
+  const preferred = Math.min(PANEL_MAX_PX, window.innerHeight - 192)
+
+  if (spaceBelow >= preferred || spaceBelow >= spaceAbove) {
+    dropUp.value = false
+    panelMaxHeight.value = Math.max(Math.min(preferred, spaceBelow), 160)
+  } else {
+    dropUp.value = true
+    panelMaxHeight.value = Math.max(Math.min(preferred, spaceAbove), 160)
+  }
+}
+
+watch(isOpen, (open) => {
+  if (open) {
+    updatePanelPlacement()
+  }
+})
+
+// 拖拽结束（位置可能大幅变化）与窗口尺寸变化时，面板若开着则重新计算放置
+watch(fabDragging, (dragging) => {
+  if (!dragging && isOpen.value) {
+    updatePanelPlacement()
+  }
+})
+
+useEventListener(window, 'resize', () => {
+  if (isOpen.value) {
+    updatePanelPlacement()
+  }
+})
 
 // 仅在知识库页且有当前文章时显示（AI 总结需要文章全文）。
 // 用路由名而非 path 判断：文章页是 /knowledge/doc-xxx，path 不再等于 '/knowledge'
@@ -51,12 +114,20 @@ watch(
 </script>
 
 <template>
-  <div v-if="visible" ref="fabRef" class="ai-summary-fab-wrap">
+  <div
+    v-if="visible"
+    ref="fabRef"
+    class="ai-summary-fab-wrap"
+    :class="[`is-${fabSide}`, { 'is-dragging': fabDragging }]"
+    :style="fabStyle"
+    @click.capture="onFabClickCapture"
+  >
     <button
       type="button"
       class="ai-summary-fab"
-      title="AI 总结本文（点击展开）"
+      title="AI 总结本文（点击展开，按住可拖动）"
       @click="toggle"
+      @pointerdown="onFabPointerDown"
     >
       <svg class="ai-summary-fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" />
@@ -71,7 +142,14 @@ watch(
     </button>
 
     <Transition name="ai-summary-pop">
-      <div v-if="isOpen" class="ai-summary-dropdown" role="dialog" aria-label="AI 摘要">
+      <div
+        v-if="isOpen"
+        class="ai-summary-dropdown"
+        :class="{ 'is-drop-up': dropUp }"
+        :style="panelMaxHeight ? { maxHeight: `${panelMaxHeight}px` } : undefined"
+        role="dialog"
+        aria-label="AI 摘要"
+      >
         <div class="ai-summary-dropdown-head">
           <p class="ai-summary-dropdown-title">
             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -122,8 +200,7 @@ watch(
           <button
             type="button"
             class="ai-summary-action"
-            :disabled="aiSummaryState === 'idle'"
-            @click="dismiss"
+            @click="isOpen = false"
           >
             收起摘要
           </button>

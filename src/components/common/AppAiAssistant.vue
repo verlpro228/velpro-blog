@@ -2,8 +2,10 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { streamLongcatChatCompletion } from '@/api/modules/ai'
+import { STORAGE_KEYS } from '@/constants/app'
 import { renderMarkdown } from '@/utils/markdownRenderer'
 import { showToast } from '@/utils/toast'
+import { useDraggableFab } from '@/hooks/useDraggableFab'
 import { useDocsStore } from '@/store/modules/docs'
 import type { AiChatMessage } from '@/types/ai'
 
@@ -29,6 +31,19 @@ const messages = ref<AssistantMessage[]>([
 ])
 
 const enabled = import.meta.env.VITE_ENABLE_AI_ASSISTANT !== 'false'
+
+// 悬浮球可拖拽：位置记忆 + 左右磁吸停靠；提示气泡随停靠方向自动换边
+const assistantEl = ref<HTMLElement | null>(null)
+const {
+  side: assistantSide,
+  dragging: assistantDragging,
+  style: assistantStyle,
+  onPointerDown: onAssistantPointerDown,
+  onClickCapture: onAssistantClickCapture,
+} = useDraggableFab(
+  { storageKey: STORAGE_KEYS.aiAssistantPos, defaultAnchor: { right: 24, bottom: 28 } },
+  assistantEl,
+)
 
 const baseSystemMessage: AiChatMessage = {
   role: 'system',
@@ -271,7 +286,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="enabled" class="ai-assistant">
+  <div
+    v-if="enabled"
+    ref="assistantEl"
+    class="ai-assistant"
+    :class="[`is-${assistantSide}`, { 'is-dragging': assistantDragging }]"
+    :style="assistantStyle"
+    @click.capture="onAssistantClickCapture"
+  >
     <div v-if="!isVisible" class="ai-assistant__prompt-bubble" aria-hidden="true">
       点击询问AI小助，
       <br />
@@ -282,14 +304,14 @@ onBeforeUnmount(() => {
       class="ai-assistant__trigger"
       type="button"
       aria-label="Open AI assistant"
+      title="AI 助手（按住可拖动到屏幕两侧）"
       @click="openAssistant"
+      @pointerdown="onAssistantPointerDown"
     >
       <span class="ai-assistant__trigger-core">
         <span class="ai-assistant__trigger-eye" />
         <span class="ai-assistant__trigger-eye" />
       </span>
-      <span class="ai-assistant__trigger-ring ai-assistant__trigger-ring--one" />
-      <span class="ai-assistant__trigger-ring ai-assistant__trigger-ring--two" />
       <span class="ai-assistant__trigger-label">ROBOT</span>
     </button>
 
@@ -395,22 +417,41 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.ai-assistant__prompt-bubble {
+/* 拖拽定位容器：位置（left/top）由 useDraggableFab 内联注入，气泡与按钮都跟随它移动 */
+.ai-assistant {
   position: fixed;
-  right: 18px;
-  bottom: 128px;
-  z-index: 69;
+  /* 高于导航栏(z-50)与页面内容，避免拖到顶部后被遮挡、无法再抓取 */
+  z-index: 88;
+  width: 64px;
+  height: 64px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ai-assistant.is-dragging {
+  z-index: 94;
+  cursor: grabbing;
+}
+
+.ai-assistant__prompt-bubble {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
   min-width: 188px;
   max-width: 228px;
   padding: 12px 14px;
-  border: 1px solid rgba(224, 244, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.62);
   border-radius: 18px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+  /* 液态玻璃：半透明渐变底 + 背景模糊提饱和 + 顶部内高光 */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.5));
   box-shadow:
-    0 18px 38px rgba(3, 17, 36, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(18px) saturate(135%);
-  color: rgba(12, 31, 51, 0.88);
+    0 18px 38px rgba(23, 84, 156, 0.16),
+    0 4px 10px rgba(23, 84, 156, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  color: rgba(15, 34, 56, 0.92);
   font-size: 13px;
   font-weight: 600;
   line-height: 1.55;
@@ -421,6 +462,23 @@ onBeforeUnmount(() => {
   animation: ai-prompt-float 4.6s ease-in-out infinite;
 }
 
+/* 深色模式：深蓝玻璃底，保持同款模糊与高光结构 */
+:root.theme-dark .ai-assistant__prompt-bubble {
+  border-color: rgba(148, 197, 255, 0.18);
+  background: linear-gradient(135deg, rgba(46, 64, 98, 0.68), rgba(16, 26, 46, 0.58));
+  box-shadow:
+    0 18px 38px rgba(2, 6, 23, 0.5),
+    0 4px 10px rgba(2, 6, 23, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: rgba(226, 238, 255, 0.95);
+}
+
+/* 停靠到左侧时气泡换边，避免伸出屏幕 */
+.ai-assistant.is-left .ai-assistant__prompt-bubble {
+  right: auto;
+  left: 0;
+}
+
 .ai-assistant__prompt-bubble::after {
   content: '';
   position: absolute;
@@ -428,35 +486,45 @@ onBeforeUnmount(() => {
   bottom: -8px;
   height: 16px;
   width: 16px;
-  border-right: 1px solid rgba(224, 244, 255, 0.22);
-  border-bottom: 1px solid rgba(224, 244, 255, 0.22);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.08));
+  /* 小尾巴用接近实底的近似色衔接气泡底边，避免玻璃模糊在角上双重叠加 */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.86));
+  border-right: 1px solid rgba(255, 255, 255, 0.62);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.62);
   transform: rotate(45deg);
 }
 
+:root.theme-dark .ai-assistant__prompt-bubble::after {
+  background: linear-gradient(135deg, rgba(42, 60, 92, 0.95), rgba(22, 34, 58, 0.92));
+  border-color: rgba(148, 197, 255, 0.18);
+}
+
+/* 左侧停靠时小尾巴同步换到左下角 */
+.ai-assistant.is-left .ai-assistant__prompt-bubble::after {
+  right: auto;
+  left: 28px;
+}
+
 .ai-assistant__trigger {
-  position: fixed;
-  right: 24px;
-  bottom: 28px;
-  z-index: 70;
+  position: relative;
+  z-index: 1;
   display: inline-flex;
-  height: 88px;
-  width: 88px;
+  height: 100%;
+  width: 100%;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(74, 216, 255, 0.34);
+  border: none;
   border-radius: 999px;
+  /* 参考图样式：明亮经典蓝机器人球，顶部高光 + 底部加深，无赛博感描边 */
   background:
-    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.32), transparent 30%),
-    radial-gradient(circle at 35% 32%, rgba(88, 216, 255, 0.26), transparent 58%),
-    linear-gradient(160deg, rgba(48, 171, 212, 0.98), rgba(9, 42, 78, 0.98));
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 32%),
+    linear-gradient(180deg, #58aef0 0%, #2b7bd0 52%, #1d5fa8 100%);
   box-shadow:
-    0 20px 36px rgba(3, 17, 36, 0.32),
-    0 10px 18px rgba(15, 115, 164, 0.18),
-    inset 0 -12px 18px rgba(4, 20, 42, 0.22),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  color: #ecfeff;
-  cursor: pointer;
+    0 14px 26px rgba(23, 84, 156, 0.32),
+    0 4px 10px rgba(23, 84, 156, 0.2),
+    inset 0 -10px 16px rgba(12, 56, 110, 0.32),
+    inset 0 3px 6px rgba(255, 255, 255, 0.26);
+  color: #ffffff;
+  cursor: grab;
   overflow: hidden;
   transition:
     transform 0.28s ease,
@@ -469,59 +537,51 @@ onBeforeUnmount(() => {
   animation-play-state: paused;
   transform: translateY(-5px) scale(1.04);
   box-shadow:
-    0 28px 48px rgba(3, 17, 36, 0.38),
-    0 14px 24px rgba(15, 115, 164, 0.2),
-    inset 0 -14px 20px rgba(4, 20, 42, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    0 22px 40px rgba(23, 84, 156, 0.36),
+    0 8px 16px rgba(23, 84, 156, 0.22),
+    inset 0 -12px 18px rgba(12, 56, 110, 0.34),
+    inset 0 3px 6px rgba(255, 255, 255, 0.3);
+}
+
+/* 拖拽中：抓取光标、停掉浮动动画与悬停位移，避免视觉抖动 */
+.ai-assistant.is-dragging .ai-assistant__trigger {
+  cursor: grabbing;
+  animation-play-state: paused;
+  transform: none;
 }
 
 .ai-assistant__trigger-core {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(2, 10px);
-  gap: 12px;
+  grid-template-columns: repeat(2, 9px);
+  gap: 15px;
   z-index: 2;
-  transform: translateY(-6px);
+  transform: translateY(-9px);
 }
 
 .ai-assistant__trigger-eye {
-  height: 10px;
-  width: 10px;
+  height: 9px;
+  width: 9px;
   border-radius: 999px;
-  background: #f8fafc;
-  box-shadow: 0 0 14px rgba(236, 254, 255, 0.58);
-}
-
-.ai-assistant__trigger-ring {
-  position: absolute;
-  border: 1px solid rgba(230, 248, 255, 0.2);
-  border-radius: 999px;
-}
-
-.ai-assistant__trigger-ring--one {
-  inset: 11px;
-}
-
-.ai-assistant__trigger-ring--two {
-  inset: 22px;
+  background: #ffffff;
 }
 
 .ai-assistant__trigger-label {
   position: absolute;
-  bottom: 16px;
-  font-size: 12px;
+  bottom: 13px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   z-index: 2;
-  color: rgba(242, 250, 255, 0.96);
-  text-shadow: 0 2px 8px rgba(6, 18, 34, 0.25);
+  color: #ffffff;
 }
 
 .ai-assistant__overlay {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  /* 必须高于悬浮球本体(88/94)，保证对话面板打开时盖住悬浮球 */
+  z-index: 96;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
@@ -896,9 +956,12 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 767px) {
+  .ai-assistant {
+    width: 58px;
+    height: 58px;
+  }
+
   .ai-assistant__prompt-bubble {
-    right: 14px;
-    bottom: 110px;
     min-width: 164px;
     max-width: 196px;
     padding: 10px 12px;
@@ -909,12 +972,9 @@ onBeforeUnmount(() => {
     right: 24px;
   }
 
-  .ai-assistant__trigger {
-    right: 16px;
-    bottom: 20px;
-    height: 78px;
-    width: 78px;
-    border-radius: 999px;
+  .ai-assistant.is-left .ai-assistant__prompt-bubble::after {
+    right: auto;
+    left: 24px;
   }
 
   .ai-assistant__overlay {
@@ -948,6 +1008,7 @@ onBeforeUnmount(() => {
   }
 }
 
+
 /* 边读边问：当前文章关联提示条 */
 .ai-assistant__article-context {
   display: flex;
@@ -980,5 +1041,97 @@ onBeforeUnmount(() => {
   border-color: rgba(34, 211, 238, 0.25);
   background: rgba(34, 211, 238, 0.08);
   color: #67e8f9;
+}
+
+/* ===== 浅色模式：对话面板整体转浅色（上方深色样式为默认，保持不变） ===== */
+:root.theme-light .ai-assistant__panel {
+  border-color: rgba(148, 163, 184, 0.35);
+  background:
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.1), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.985), rgba(240, 247, 255, 0.99));
+  box-shadow: 0 34px 80px rgba(15, 42, 80, 0.18);
+  color: #1e293b;
+}
+
+:root.theme-light .ai-assistant__title {
+  color: #0f172a;
+}
+
+:root.theme-light .ai-assistant__icon-button,
+:root.theme-light .ai-assistant__secondary-button {
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(15, 23, 42, 0.045);
+  color: #334155;
+}
+
+:root.theme-light .ai-assistant__message-label {
+  color: #64748b;
+}
+
+:root.theme-light .ai-assistant__bubble {
+  border-color: rgba(148, 163, 184, 0.32);
+  background: rgba(15, 23, 42, 0.045);
+}
+
+:root.theme-light .ai-assistant__message.is-user .ai-assistant__bubble {
+  border-color: rgba(8, 145, 178, 0.32);
+  background: linear-gradient(135deg, rgba(165, 233, 240, 0.55), rgba(186, 230, 253, 0.62));
+}
+
+:root.theme-light .ai-assistant__markdown {
+  color: #1e293b;
+}
+
+:root.theme-light .ai-assistant__message.is-user .ai-assistant__markdown {
+  color: #0c4a5e;
+}
+
+:root.theme-light .ai-assistant__markdown :deep(h1),
+:root.theme-light .ai-assistant__markdown :deep(h2),
+:root.theme-light .ai-assistant__markdown :deep(h3),
+:root.theme-light .ai-assistant__markdown :deep(h4) {
+  color: #0f172a;
+}
+
+/* 行内代码浅底深字；代码块保留深色语法高亮底，与全站 markdown 惯例一致 */
+:root.theme-light .ai-assistant__markdown :deep(code:not(pre code)) {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+:root.theme-light .ai-assistant__markdown :deep(blockquote) {
+  background: rgba(15, 23, 42, 0.04);
+  color: #475569;
+}
+
+:root.theme-light .ai-assistant__config-title {
+  color: #92400e;
+}
+
+:root.theme-light .ai-assistant__config-copy {
+  color: #a16207;
+}
+
+:root.theme-light .ai-assistant__thinking-dot {
+  background: rgba(71, 85, 105, 0.75);
+  box-shadow: 0 0 12px rgba(8, 145, 178, 0.2);
+}
+
+:root.theme-light .ai-assistant__footer {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(241, 247, 255, 0.75);
+}
+
+:root.theme-light .ai-assistant__composer-shell {
+  border-color: rgba(148, 163, 184, 0.42);
+  background: #ffffff;
+}
+
+:root.theme-light .ai-assistant__composer {
+  color: #0f172a;
+}
+
+:root.theme-light .ai-assistant__composer::placeholder {
+  color: #94a3b8;
 }
 </style>
