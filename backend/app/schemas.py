@@ -29,6 +29,12 @@ class DocMutationPayload(BaseModel):
     status: Literal["published", "draft"] = "published"
 
 
+class LikePayload(BaseModel):
+    """点赞/取消点赞：liked=false 表示撤销，点赞数不会减到负数。"""
+
+    liked: bool = True
+
+
 class ProfileUpdatePayload(BaseModel):
     name: str = Field(min_length=1, max_length=64)
     tagline: str = ""

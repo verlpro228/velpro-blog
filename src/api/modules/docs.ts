@@ -38,7 +38,7 @@ export async function reportDocViewApi(id: string) {
   return response.data.data.views
 }
 
-export async function likeDocApi(id: string) {
-  const response = await http.post<ApiResponse<{ likes: number }>>(`/docs/${id}/like`)
+export async function likeDocApi(id: string, liked = true) {
+  const response = await http.post<ApiResponse<{ likes: number }>>(`/docs/${id}/like`, { liked })
   return response.data.data.likes
 }

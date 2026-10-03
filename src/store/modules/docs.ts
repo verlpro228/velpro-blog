@@ -158,21 +158,44 @@ export const useDocsStore = defineStore('docs', {
       return this.likedDocIds.includes(docId)
     },
 
-    async likeDoc(docId: string) {
-      if (this.isDocLiked(docId)) {
+    async likeDoc(docId: string, liked = true) {
+      // 幂等：已赞再赞 / 未赞再取消都不重复请求
+      if (this.isDocLiked(docId) === liked) {
         return this.docs.find((doc) => doc.id === docId)?.likes ?? 0
       }
 
-      const likes = await likeDocApi(docId)
-      this.likedDocIds = [...this.likedDocIds, docId]
-      setLocalStorage(DOC_INTERACTION_KEYS.likedDocs, this.likedDocIds)
-
+      // 乐观更新：先改本地状态让 UI 即时反馈（远程库往返 1s+，不能等响应再渲染），失败再回滚
       const item = this.docs.find((doc) => doc.id === docId)
+      const previousLiked = !liked
+      const previousLikes = item?.likes ?? 0
+      this.likedDocIds = liked
+        ? [...this.likedDocIds, docId]
+        : this.likedDocIds.filter((id) => id !== docId)
+      setLocalStorage(DOC_INTERACTION_KEYS.likedDocs, this.likedDocIds)
       if (item) {
-        item.likes = likes
+        item.likes = Math.max(0, previousLikes + (liked ? 1 : -1))
       }
 
-      return likes
+      try {
+        const likes = await likeDocApi(docId, liked)
+        // 请求期间用户可能已再次点击（状态反转）：只校准仍与本请求意图一致的计数，避免覆盖最新状态
+        if (this.isDocLiked(docId) === liked && item) {
+          item.likes = likes
+        }
+        return likes
+      } catch (error) {
+        // 回滚：仅当期间状态未被再次操作时，避免吞掉用户的后续点击
+        if (this.isDocLiked(docId) === liked) {
+          this.likedDocIds = previousLiked
+            ? [...this.likedDocIds, docId]
+            : this.likedDocIds.filter((id) => id !== docId)
+          setLocalStorage(DOC_INTERACTION_KEYS.likedDocs, this.likedDocIds)
+          if (item) {
+            item.likes = previousLikes
+          }
+        }
+        throw error
+      }
     },
 
     async reportView(docId: string) {

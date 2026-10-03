@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Doc, User
 from ..rate_limit import SlidingWindowLimiter, limit_requests
-from ..schemas import DocMutationPayload, ok
+from ..schemas import DocMutationPayload, LikePayload, ok
 from ..security import get_current_user
 
 router = APIRouter()
@@ -157,14 +157,18 @@ def report_view(doc_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/{doc_id}/like", dependencies=[Depends(limit_requests(interaction_limiter, "like"))])
-def like_doc(doc_id: str, db: Session = Depends(get_db)):
-    """点赞 +1（客户端本地存储去重，公开文档才可赞）。"""
+def like_doc(doc_id: str, payload: LikePayload | None = None, db: Session = Depends(get_db)):
+    """点赞/取消点赞（客户端本地存储去重，公开文档才可赞）。liked=False 撤销点赞。"""
     doc = get_doc_or_404(db, doc_id)
 
     if doc.status != "published":
         raise HTTPException(status_code=404, detail="文档不存在")
 
-    doc.likes = doc.likes + 1
+    # 兼容旧客户端：不带 body 视为点赞
+    if payload is None or payload.liked:
+        doc.likes = doc.likes + 1
+    else:
+        doc.likes = max(0, doc.likes - 1)
     db.commit()
     db.refresh(doc)
     return ok({"likes": doc.likes})
