@@ -1,7 +1,7 @@
 <template>
   <footer class="app-footer border-t">
     <div
-      class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm sm:px-6 md:flex-row md:items-center md:justify-between md:py-10"
+      class="mx-auto flex max-w-screen-xl flex-col gap-3 px-3 py-8 text-sm sm:px-6 md:flex-row md:items-center md:justify-between md:py-10 2xl:max-w-screen-2xl"
     >
       <div>
         <p class="app-heading text-base font-semibold">Velpro Blog</p>

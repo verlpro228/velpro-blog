@@ -27,7 +27,7 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
 
 <template>
   <header class="fixed inset-x-0 top-0 z-50 px-3 py-3 sm:px-4 sm:py-4">
-    <div class="app-panel mx-auto max-w-7xl rounded-[1.5rem] px-4 py-3 backdrop-blur sm:rounded-full sm:px-6">
+    <div class="app-panel app-navbar-panel mx-auto max-w-7xl rounded-[1.5rem] px-4 py-3 backdrop-blur sm:rounded-full sm:px-6">
       <div class="flex items-center justify-between gap-3">
         <div class="flex min-w-0 items-center gap-2.5 sm:gap-3">
           <div
@@ -39,7 +39,7 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
           </div>
         </div>
 
-        <nav class="hidden items-center gap-6 md:flex">
+        <nav class="hidden items-center gap-1 md:flex">
           <RouterLink
             v-for="item in NAVIGATION_ITEMS"
             :key="item.path"
@@ -112,13 +112,22 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
             </svg>
           </button>
 
+          <!-- 登录后展示后台入口；未登录时「登录」按钮是唯一的登录页入口，二者互斥 -->
           <button
-            v-if="!isAdminRoute"
+            v-if="!isAdminRoute && userStore.isAuthenticated"
             class="app-button-secondary hidden h-10 border-0 px-4 text-sm shadow-md hover:shadow-lg sm:inline-flex lg:h-11 lg:px-5"
             type="button"
             @click="router.push('/admin/dashboard')"
           >
             进入后台
+          </button>
+          <button
+            v-else-if="!isAdminRoute"
+            class="app-button-secondary hidden h-10 border-0 px-4 text-sm shadow-md hover:shadow-lg sm:inline-flex lg:h-11 lg:px-5"
+            type="button"
+            @click="router.push('/login')"
+          >
+            登录
           </button>
 
           <button
@@ -141,18 +150,26 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
             :key="item.path"
             :to="item.path"
             class="app-route-pill shrink-0 rounded-full px-4 py-2 text-sm font-medium transition"
-            :class="activeNavPath === item.path ? 'border-cyan-400/30 bg-cyan-400/12 text-slate-50' : ''"
+            :class="activeNavPath === item.path ? 'border-cyan-400/30 bg-cyan-400/12 text-[color:var(--color-text-strong)]' : ''"
           >
             {{ item.label }}
           </RouterLink>
 
           <button
-            v-if="!isAdminRoute"
+            v-if="!isAdminRoute && userStore.isAuthenticated"
             type="button"
             class="app-route-pill shrink-0 rounded-full px-4 py-2 text-sm font-medium"
             @click="router.push('/admin/dashboard')"
           >
             后台
+          </button>
+          <button
+            v-else-if="!isAdminRoute"
+            type="button"
+            class="app-route-pill shrink-0 rounded-full px-4 py-2 text-sm font-medium"
+            @click="router.push('/login')"
+          >
+            登录
           </button>
         </div>
       </div>

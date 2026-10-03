@@ -36,7 +36,7 @@ const workflow = [
         <article
           v-for="(item, index) in workflow"
           :key="item.title"
-          class="app-card story-card interactive-card rounded-[1.5rem] p-4 sm:p-5"
+          class="app-card glass-card story-card interactive-card rounded-[1.5rem] p-4 sm:p-5"
         >
           <p class="app-overline text-sm font-medium">Step {{ index + 1 }}</p>
           <h3 class="app-heading mt-3 text-xl font-semibold">

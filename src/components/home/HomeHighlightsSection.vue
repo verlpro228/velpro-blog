@@ -33,7 +33,7 @@ const featureCards = [
         <article
           v-for="card in featureCards"
           :key="card.title"
-          class="app-card feature-card interactive-card rounded-[1.75rem] p-5 sm:p-6"
+          class="app-card glass-card feature-card interactive-card rounded-[1.75rem] p-5 sm:p-6"
         >
           <p class="app-overline text-sm font-medium">核心能力</p>
           <h3 class="app-heading mt-4 text-xl font-semibold sm:text-2xl">

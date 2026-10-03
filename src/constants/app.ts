@@ -8,6 +8,8 @@ export const STORAGE_KEYS = {
   docs: 'velpro_blog_docs',
   editorDraft: 'velpro_blog_editor_draft',
   theme: 'velpro_blog_theme',
+  aiAssistantPos: 'velpro_blog_ai_assistant_pos',
+  aiSummaryFabPos: 'velpro_blog_ai_summary_fab_pos',
 } as const
 
 // 文档互动去重：点赞全局只记一次（localStorage），浏览量每个浏览器会话只记一次（sessionStorage）
@@ -31,7 +33,7 @@ export const NAVIGATION_ITEMS = [
   { label: '知识库', path: '/knowledge' },
   { label: '归档', path: '/archive' },
   { label: '项目展示', path: '/projects' },
-  { label: '个人介绍', path: '/about' },
+  { label: '关于', path: '/about' },
   { label: '留言板', path: '/guestbook' },
 ] as const
 

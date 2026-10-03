@@ -52,13 +52,15 @@ const { display: displayNumbers } = useCountUp(metricTargets);
 const heroMetrics = computed(() =>
   metricSources.value.map((metric, index) => {
     const current = displayNumbers.value[index];
+    // 数据未就绪（value=null）或数字动画尚未拿到目标值（任一卡未就绪 → targets=null →
+    // display 为空数组）都算 loading：否则已就绪的卡会渲染成空白，而不是波点
+    const loading = metric.value === null || current === undefined;
 
     return {
       label: metric.label,
-      value:
-        metric.value === null || current === undefined
-          ? "—"
-          : `${current.toLocaleString()}${metric.suffix}`,
+      // 数据未就绪时渲染三个跳跃点，避免空白横线占位
+      loading,
+      value: loading ? "" : `${current.toLocaleString()}${metric.suffix}`,
     };
   }),
 );
@@ -157,7 +159,15 @@ onMounted(() => {
           >
             <p class="app-caption text-sm">{{ metric.label }}</p>
             <p class="app-heading mt-3 text-3xl font-semibold">
-              {{ metric.value }}
+              <span
+                v-if="metric.loading"
+                class="stat-loading-dots"
+                role="status"
+                aria-label="数据加载中"
+              >
+                <i /><i /><i />
+              </span>
+              <template v-else>{{ metric.value }}</template>
             </p>
           </div>
         </div>
@@ -210,6 +220,63 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* hero 主/次按钮：液态玻璃化，与统计卡统一 */
+.hero-copy .app-button-primary {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: linear-gradient(135deg, rgba(14, 165, 190, 0.8), rgba(8, 116, 145, 0.68));
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow:
+    0 12px 28px rgba(8, 116, 145, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.hero-copy .app-button-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.36));
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  box-shadow:
+    0 12px 28px rgba(15, 42, 80, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root.theme-dark .hero-copy .app-button-primary {
+  border-color: rgba(148, 197, 255, 0.22);
+  background: linear-gradient(135deg, rgba(14, 165, 190, 0.5), rgba(8, 116, 145, 0.4));
+  box-shadow:
+    0 12px 28px rgba(2, 6, 23, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  /* 深色下玻璃底变深，文字改白色（原 --color-primary-contrast 为深青，配浅色实底） */
+  color: #ffffff;
+}
+
+:root.theme-dark .hero-copy .app-button-secondary {
+  border-color: rgba(148, 197, 255, 0.14);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  box-shadow:
+    0 12px 28px rgba(2, 6, 23, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 统计卡：液态玻璃——半透明渐变底 + 背景模糊 + 内高光，压住 app-card 的实底样式 */
+.hero-metric {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.36));
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  box-shadow:
+    0 14px 32px rgba(15, 42, 80, 0.12),
+    0 4px 12px rgba(15, 42, 80, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root.theme-dark .hero-metric {
+  border-color: rgba(148, 197, 255, 0.14);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
 /* 星图容器：保留原 Vanta 面板的深蓝渐变作为降级底，星图画布叠加其上 */
 .hero-galaxy {
   position: relative;
@@ -229,5 +296,49 @@ onMounted(() => {
       transparent 46%
     ),
     linear-gradient(160deg, #071226 0%, #050b1a 55%, #030814 100%);
+}
+
+/* 统计卡加载态：三个跳跃点（波点），数据就绪后切换为滚动数字 */
+.stat-loading-dots {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  height: 1.1em;
+}
+
+.stat-loading-dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  animation: stat-dot-bounce 1.1s ease-in-out infinite;
+}
+
+.stat-loading-dots i:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.stat-loading-dots i:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes stat-dot-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translateY(-9px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-loading-dots i {
+    animation: none;
+    opacity: 0.55;
+  }
 }
 </style>
