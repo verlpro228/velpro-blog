@@ -36,7 +36,9 @@ let chart: echarts.ECharts | null = null
 let resizeObserver: ResizeObserver | null = null
 
 function textColor() {
-  return isDark.value ? 'rgba(226, 232, 240, 0.85)' : '#475569'
+  // 深色下必须用不透明浅色：半透明 rgba 会让 ECharts 6 饼图部分标签渲染成
+  // "空心+描边"的毛边效果（深色底上几乎不可读），浅色下用原 slate-600
+  return isDark.value ? '#e2e8f0' : '#475569'
 }
 
 function render() {

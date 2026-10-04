@@ -944,6 +944,11 @@ onBeforeUnmount(() => {
     height: 58px;
   }
 
+  /* 移动端屏幕小，提示气泡会遮挡导航/列表内容，只保留 ROBOT 球体 */
+  .ai-assistant__prompt-bubble {
+    display: none;
+  }
+
   .ai-assistant__prompt-bubble {
     min-width: 164px;
     max-width: 196px;

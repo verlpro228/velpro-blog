@@ -9,7 +9,9 @@ import AiSummaryFab from '@/components/common/AiSummaryFab.vue'
 <template>
   <div class="app-shell">
     <AppNavbar />
-    <main class="pt-32 md:pt-24">
+    <!-- 移动端/平板竖屏导航为两行（图标行 + 胶囊行，约 148px），pt-[10rem] 保证内容不被遮挡；
+         lg（1024）起桌面单行导航，xl（1280）起收紧为 pt-24 与原设计一致 -->
+    <main class="pt-[10rem] lg:pt-32 xl:pt-24">
       <RouterView v-slot="{ Component, route }">
         <Transition name="route-fade" mode="out-in">
           <component :is="Component" :key="route.fullPath" />

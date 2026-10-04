@@ -2,8 +2,11 @@
 import { computed, onMounted, ref } from 'vue'
 import StatChartCard from '@/components/admin/StatChartCard.vue'
 import { getDashboardStatsApi } from '@/api/modules/stats'
+import { useTheme } from '@/hooks/useTheme'
 import type { DashboardStats } from '@/types/stats'
 import type { EChartsCoreOption } from 'echarts/core'
+
+const { isDark } = useTheme()
 
 const stats = ref<DashboardStats | null>(null)
 const loading = ref(false)
@@ -44,6 +47,8 @@ const topDocsOption = computed<EChartsCoreOption | null>(() => {
     xAxis: {
       type: 'value',
       splitLine: { lineStyle: { opacity: 0.35 } },
+      // ECharts 轴标签有自己的深灰默认色（为浅色底设计），深色下必须显式给浅色
+      axisLabel: { color: isDark.value ? '#e2e8f0' : '#475569' },
     },
     yAxis: {
       type: 'category',
@@ -51,6 +56,7 @@ const topDocsOption = computed<EChartsCoreOption | null>(() => {
       axisLabel: {
         width: 150,
         overflow: 'truncate',
+        color: isDark.value ? '#e2e8f0' : '#475569',
       },
     },
     series: [
@@ -72,7 +78,12 @@ const topDocsOption = computed<EChartsCoreOption | null>(() => {
             ],
           },
         },
-        label: { show: true, position: 'right', formatter: '{c}' },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: '{c}',
+          color: isDark.value ? '#e2e8f0' : '#475569',
+        },
       },
     ],
   }
@@ -95,6 +106,7 @@ const tagStatsOption = computed<EChartsCoreOption | null>(() => {
       icon: 'circle',
       itemWidth: 8,
       itemHeight: 8,
+      textStyle: { color: isDark.value ? '#e2e8f0' : '#475569' },
     },
     series: [
       {
@@ -103,7 +115,9 @@ const tagStatsOption = computed<EChartsCoreOption | null>(() => {
         center: ['50%', '44%'],
         avoidLabelOverlap: true,
         itemStyle: { borderRadius: 6, borderWidth: 2 },
-        label: { formatter: '{b} {c}' },
+        // ECharts 6 饼图 label 必须显式给 color：缺失时会走"附加文本"渲染路径，
+        // 中文标签在深色底上渲染成"空心+毛边"几乎不可读（全局 textStyle 救不了）
+        label: { formatter: '{b} {c}', color: isDark.value ? '#e2e8f0' : '#475569' },
         data: items.map((item, index) => ({
           name: item.name,
           value: item.count,
@@ -135,12 +149,13 @@ const monthlyOption = computed<EChartsCoreOption | null>(() => {
       type: 'category',
       boundaryGap: false,
       data: items.map((item) => item.month.slice(5)),
-      axisLabel: { interval: 1 },
+      axisLabel: { interval: 1, color: isDark.value ? '#e2e8f0' : '#475569' },
     },
     yAxis: {
       type: 'value',
       minInterval: 1,
       splitLine: { lineStyle: { opacity: 0.35 } },
+      axisLabel: { color: isDark.value ? '#e2e8f0' : '#475569' },
     },
     series: [
       {

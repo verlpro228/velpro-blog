@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useMediaQuery } from "@vueuse/core";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useDocsStore } from "@/store/modules/docs";
 import { useProjectsStore } from "@/store/modules/projects";
+
+// 知识星球是 three.js WebGL 场景：移动端（<768px）直接卸载，避免不可见时仍占用 GPU 渲染；平板与桌面正常显示
+const showGalaxy = useMediaQuery("(min-width: 768px)");
 
 const heroTitle = "阅读 · 检索 · 对话";
 const heroChars = Array.from(heroTitle);
@@ -236,15 +240,15 @@ async function fetchHitokoto() {
         </figure>
 
         <div
-          class="hero-copy mt-8 grid gap-4 sm:mt-10 sm:grid-cols-2 md:grid-cols-3"
+          class="hero-copy mt-8 grid grid-cols-3 gap-2 sm:mt-10 sm:gap-4"
         >
           <div
             v-for="metric in heroMetrics"
             :key="metric.label"
-            class="app-card hero-metric rounded-[1.5rem] px-5 py-4"
+            class="app-card hero-metric rounded-[1.5rem] px-2 py-3 text-center sm:px-5 sm:py-4 sm:text-left"
           >
-            <p class="app-caption text-sm">{{ metric.label }}</p>
-            <p class="app-heading mt-3 text-3xl font-semibold">
+            <p class="app-caption text-xs sm:text-sm">{{ metric.label }}</p>
+            <p class="app-heading mt-2 text-xl font-semibold whitespace-nowrap sm:mt-3 sm:text-3xl">
               <span
                 v-if="metric.loading"
                 class="stat-loading-dots"
@@ -270,6 +274,7 @@ async function fetchHitokoto() {
 
         <div class="space-y-5">
           <div
+            v-if="showGalaxy"
             class="floating-panel overflow-hidden rounded-[1.75rem] border border-cyan-400/20 bg-cyan-400/10"
           >
             <KnowledgeGalaxy class="hero-galaxy" />

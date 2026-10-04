@@ -29,7 +29,7 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
   <header class="fixed inset-x-0 top-0 z-50 px-3 py-3 sm:px-4 sm:py-4">
     <div class="app-panel app-navbar-panel mx-auto max-w-7xl rounded-[1.5rem] px-4 py-3 backdrop-blur sm:rounded-full sm:px-6">
       <div class="flex items-center justify-between gap-3">
-        <div class="flex min-w-0 items-center gap-2.5 sm:gap-3">
+        <div class="flex shrink-0 items-center gap-2.5 sm:gap-3">
           <div
             class="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 sm:h-10 sm:w-10"
           />
@@ -39,19 +39,21 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
           </div>
         </div>
 
-        <nav class="hidden items-center gap-1 md:flex">
+        <!-- lg（1024px）起展示桌面导航：平板竖屏（768~1023）放不下完整菜单，沿用下方胶囊行；
+             链接 shrink-0 whitespace-nowrap 保证中文标签永远横向单行显示 -->
+        <nav class="hidden items-center gap-1 whitespace-nowrap lg:flex">
           <RouterLink
             v-for="item in NAVIGATION_ITEMS"
             :key="item.path"
             :to="item.path"
-            class="app-nav-link text-sm font-medium"
+            class="app-nav-link shrink-0 whitespace-nowrap text-sm font-medium"
             :class="{ 'is-active': activeNavPath === item.path }"
           >
             {{ item.label }}
           </RouterLink>
         </nav>
 
-        <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div class="flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-2 xl:gap-3">
           <button
             class="app-icon-button flex h-10 w-10 shrink-0 items-center justify-center border-0 p-0 shadow-md hover:shadow-lg sm:h-11 sm:w-11"
             type="button"
@@ -112,10 +114,11 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
             </svg>
           </button>
 
-          <!-- 登录后展示后台入口；未登录时「登录」按钮是唯一的登录页入口，二者互斥 -->
+          <!-- 登录后展示后台入口；未登录时「登录」按钮是唯一的登录页入口，二者互斥。
+               !hidden 强制移动端隐藏：.app-button-secondary 的 display 会覆盖普通 hidden（移动端由下方胶囊行承载入口） -->
           <button
             v-if="!isAdminRoute && userStore.isAuthenticated"
-            class="app-button-secondary hidden h-10 border-0 px-4 text-sm shadow-md hover:shadow-lg sm:inline-flex lg:h-11 lg:px-5"
+            class="app-button-secondary !hidden h-10 border-0 px-4 text-sm shadow-md hover:shadow-lg lg:!inline-flex lg:h-11 lg:px-5"
             type="button"
             @click="router.push('/admin/dashboard')"
           >
@@ -123,16 +126,17 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
           </button>
           <button
             v-else-if="!isAdminRoute"
-            class="app-button-secondary hidden h-10 border-0 px-4 text-sm shadow-md hover:shadow-lg sm:inline-flex lg:h-11 lg:px-5"
+            class="app-button-secondary !hidden h-10 border-0 px-4 text-sm shadow-md hover:shadow-lg lg:!inline-flex lg:h-11 lg:px-5"
             type="button"
             @click="router.push('/login')"
           >
             登录
           </button>
 
+          <!-- 退出登录：lg 起在顶行；<lg 在下方胶囊行末尾（顶行空间有限，避免溢出） -->
           <button
             v-if="userStore.isAuthenticated"
-            class="app-button-secondary h-10 border-0 px-3 text-xs shadow-md hover:shadow-lg sm:h-11 sm:px-5 sm:text-sm"
+            class="app-button-secondary !hidden h-10 border-0 px-3 text-xs shadow-md hover:shadow-lg lg:!inline-flex sm:h-11 sm:px-5 sm:text-sm"
             type="button"
             @click="logout"
           >
@@ -141,7 +145,7 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
         </div>
       </div>
 
-      <div class="mt-4 md:hidden">
+      <div class="mt-4 lg:hidden">
         <div
           class="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
@@ -170,6 +174,14 @@ const themeActionLabel = computed(() => (isDark.value ? '切换浅色模式' : '
             @click="router.push('/login')"
           >
             登录
+          </button>
+          <button
+            v-if="userStore.isAuthenticated"
+            type="button"
+            class="app-route-pill shrink-0 rounded-full px-4 py-2 text-sm font-medium"
+            @click="logout"
+          >
+            退出登录
           </button>
         </div>
       </div>

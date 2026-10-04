@@ -58,8 +58,8 @@ const openDetail = (projectId: string) => {
 
 <template>
   <section class="projects-page px-4 pb-12 sm:px-6 sm:pb-16">
-    <!-- 搜索 + 分类筛选：整块固定在导航栏下方，与卡片容器同宽，滚动全程可搜索/切换分类 -->
-    <div class="fixed inset-x-0 top-24 z-30 px-4 sm:px-6">
+    <!-- 搜索 + 分类筛选：整块固定在导航栏下方（两行导航断点与 BaseLayout 同步 lg），滚动全程可搜索/切换分类 -->
+    <div class="fixed inset-x-0 top-[10rem] z-30 px-4 lg:top-24 sm:px-6">
       <div class="mx-auto max-w-7xl">
         <label class="mx-auto block w-full max-w-xl">
           <span class="sr-only">搜索项目</span>
@@ -139,8 +139,13 @@ const openDetail = (projectId: string) => {
         </article>
       </div>
 
+      <!-- 首次加载中显示骨架屏，避免瞬时空态 -->
+      <div v-if="projectsStore.loading && !projectsStore.initialized" class="mt-10 space-y-6">
+        <div v-for="i in 3" :key="i" class="app-card h-56 rounded-[1.75rem]" />
+      </div>
+
       <AppEmptyState
-        v-if="!filteredProjects.length"
+        v-else-if="!filteredProjects.length"
         class="mt-10"
         title="没有找到匹配项目"
         description="可以换个关键词，或者从不同项目类型继续筛选。"

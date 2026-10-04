@@ -49,10 +49,11 @@ html::-webkit-scrollbar-button {
 }
 
 :root {
-  --color-bg: #020617;
-  --color-bg-secondary: #0f172a;
-  --color-surface: rgba(15, 23, 42, 0.78);
-  --color-surface-strong: rgba(15, 23, 42, 0.92);
+  /* 深色主题基准（参照 GitHub Dark：#0d1117 底 / #161b22 面板），不用纯深黑 */
+  --color-bg: #0d1117;
+  --color-bg-secondary: #161b22;
+  --color-surface: rgba(22, 27, 34, 0.78);
+  --color-surface-strong: rgba(22, 27, 34, 0.92);
   --color-surface-soft: rgba(255, 255, 255, 0.055);
   --color-border: rgba(148, 163, 184, 0.18);
   --color-border-strong: rgba(148, 163, 184, 0.3);
@@ -64,7 +65,7 @@ html::-webkit-scrollbar-button {
   --color-primary-strong: #06b6d4;
   --color-primary-contrast: #083344;
   --color-chip-bg: rgba(255, 255, 255, 0.06);
-  --color-button-secondary-bg: rgba(15, 23, 42, 0.42);
+  --color-button-secondary-bg: rgba(22, 27, 34, 0.42);
   --color-body-glow-one: rgba(34, 211, 238, 0.12);
   --color-body-glow-two: rgba(59, 130, 246, 0.1);
   --color-article-bg: #ffffff;
@@ -440,6 +441,13 @@ button {
 
 .app-nav-link:hover {
   color: var(--color-primary);
+}
+
+/* <1280px（平板/小桌面）收紧导航内边距：保证单行放下且中文标签不换行 */
+@media (max-width: 1279px) {
+  .app-nav-link {
+    padding: 0.4rem 0.45rem;
+  }
 }
 
 /* 选中：iOS 26 液态玻璃胶囊——半透明模糊底 + 细边框 + 顶部内高光，背景淡入并轻微上浮 */
@@ -884,6 +892,51 @@ button {
   text-decoration-color: var(--color-primary);
 }
 
+/* ===== 后台编辑器实时预览面板：深色跟随主题（与知识库阅读体验一致） =====
+   面板原本固定白纸底（--color-article-bg），而全局 .markdown-body 正文色跟随主题
+   （深色为白字），深色下会变成白底白字不可读；这里深色下改用深色底 */
+:root.theme-dark .editor-preview-panel {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+:root.theme-dark .editor-preview-panel .markdown-body blockquote {
+  background: rgba(15, 23, 42, 0.72);
+  color: inherit;
+}
+
+:root.theme-dark .editor-preview-panel .markdown-body p code,
+:root.theme-dark .editor-preview-panel .markdown-body li code {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* 预览与阅读页同规则：转载内容自带的彩色内联样式在预览里同样统一字色 */
+.editor-preview-panel .markdown-body [style*="color"],
+.editor-preview-panel .markdown-body font {
+  color: inherit !important;
+}
+
+.editor-preview-panel .markdown-body [style*="background"] {
+  background-color: transparent !important;
+}
+
+.editor-preview-panel .markdown-body :not(pre) > code {
+  color: inherit;
+}
+
+.editor-preview-panel .markdown-body a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--color-border-strong);
+}
+
+.editor-preview-panel .markdown-body a:hover {
+  text-decoration-color: var(--color-primary);
+}
+
 .el-timeline-item__tail {
   border-left-color: var(--color-border) !important;
 }
@@ -997,6 +1050,20 @@ button {
 
 .el-tag {
   border-radius: 999px !important;
+}
+
+/* 悬浮提示（el-popper is-dark，表格溢出提示等）跟随主题：
+   EP 深色气泡背景默认取 --el-text-color-primary，而本站把它映射成了主题文字色，
+   深色模式下会把气泡染成浅色底 + 白字（不可读），这里深色下显式给深底浅字 */
+:root.theme-dark .el-popper.is-dark {
+  background: var(--color-bg-secondary) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+:root.theme-dark .el-popper.is-dark .el-popper__arrow::before {
+  background: var(--color-bg-secondary) !important;
+  border-color: var(--color-border) !important;
 }
 
 .el-tag.el-tag--info,

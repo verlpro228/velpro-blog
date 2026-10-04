@@ -2,8 +2,11 @@
 import { computed, onMounted, ref } from 'vue'
 import StatChartCard from '@/components/admin/StatChartCard.vue'
 import { getPublicStatsApi } from '@/api/modules/stats'
+import { useTheme } from '@/hooks/useTheme'
 import type { EChartsCoreOption } from 'echarts/core'
 import type { PublicStats } from '@/types/stats'
+
+const { isDark } = useTheme()
 
 const stats = ref<PublicStats | null>(null)
 const loading = ref(false)
@@ -42,6 +45,8 @@ const topDocsOption = computed<EChartsCoreOption | null>(() => {
     xAxis: {
       type: 'value',
       splitLine: { lineStyle: { opacity: 0.35 } },
+      // ECharts 轴标签有自己的深灰默认色（为浅色底设计），深色下必须显式给浅色
+      axisLabel: { color: isDark.value ? '#e2e8f0' : '#475569' },
     },
     yAxis: {
       type: 'category',
@@ -49,6 +54,7 @@ const topDocsOption = computed<EChartsCoreOption | null>(() => {
       axisLabel: {
         width: 150,
         overflow: 'truncate',
+        color: isDark.value ? '#e2e8f0' : '#475569',
       },
     },
     series: [
@@ -70,7 +76,12 @@ const topDocsOption = computed<EChartsCoreOption | null>(() => {
             ],
           },
         },
-        label: { show: true, position: 'right', formatter: '{c}' },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: '{c}',
+          color: isDark.value ? '#e2e8f0' : '#475569',
+        },
       },
     ],
   }
@@ -93,6 +104,7 @@ const tagStatsOption = computed<EChartsCoreOption | null>(() => {
       icon: 'circle',
       itemWidth: 8,
       itemHeight: 8,
+      textStyle: { color: isDark.value ? '#e2e8f0' : '#475569' },
     },
     series: [
       {
@@ -101,7 +113,8 @@ const tagStatsOption = computed<EChartsCoreOption | null>(() => {
         center: ['50%', '44%'],
         avoidLabelOverlap: true,
         itemStyle: { borderRadius: 6, borderWidth: 2 },
-        label: { formatter: '{b} {c}' },
+        // ECharts 6 饼图 label 必须显式给 color，否则深色底上中文标签渲染成"空心+毛边"（同后台看板）
+    label: { formatter: '{b} {c}', color: isDark.value ? '#e2e8f0' : '#475569' },
         data: items.map((item, index) => ({
           name: item.name,
           value: item.count,
@@ -133,12 +146,13 @@ const monthlyOption = computed<EChartsCoreOption | null>(() => {
       type: 'category',
       boundaryGap: false,
       data: items.map((item) => item.month.slice(5)),
-      axisLabel: { interval: 1 },
+      axisLabel: { interval: 1, color: isDark.value ? '#e2e8f0' : '#475569' },
     },
     yAxis: {
       type: 'value',
       minInterval: 1,
       splitLine: { lineStyle: { opacity: 0.35 } },
+      axisLabel: { color: isDark.value ? '#e2e8f0' : '#475569' },
     },
     series: [
       {
@@ -192,8 +206,8 @@ onMounted(async () => {
         </p>
       </div>
 
-      <!-- 数字卡：玻璃质感 + hover 反馈，与首页统计卡同语言 -->
-      <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- 数字卡：玻璃质感 + hover 反馈，与首页统计卡同语言；移动端四卡同行，字号收窄防溢出 -->
+      <div class="mb-6 grid grid-cols-4 gap-1.5 sm:gap-4">
         <template v-if="loading">
           <div class="app-spinner-label col-span-full justify-center py-6">
             <span class="app-spinner app-spinner--lg" aria-hidden="true" />
@@ -205,11 +219,11 @@ onMounted(async () => {
           v-for="card in overviewCards"
           v-else
           :key="card.label"
-          class="glass-card rounded-[1.5rem] px-5 py-4"
+          class="glass-card rounded-[1.5rem] px-1 py-3 text-center sm:px-5 sm:py-4 sm:text-left"
         >
-          <p class="app-caption text-sm">{{ card.label }}</p>
-          <p class="app-heading mt-3 text-3xl font-semibold tabular-nums">
-            {{ card.value.toLocaleString() }}<span class="text-base font-medium">{{ card.suffix }}</span>
+          <p class="app-caption text-[10px] sm:text-sm">{{ card.label }}</p>
+          <p class="app-heading mt-2 text-lg font-semibold tabular-nums whitespace-nowrap sm:mt-3 sm:text-3xl">
+            {{ card.value.toLocaleString() }}<span class="text-xs font-medium sm:text-base">{{ card.suffix }}</span>
           </p>
         </div>
       </div>
