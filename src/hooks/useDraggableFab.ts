@@ -15,12 +15,12 @@ interface FabDragOptions {
   defaultAnchor: { right: number; bottom: number }
 }
 
-/** 已挂载悬浮球登记表：同轨道避让用（键 = storageKey） */
+/** 已挂载悬浮球登记表：重叠避让用（键 = storageKey） */
 const fabRegistry = new Map<string, { x: number; y: number; w: number; h: number }>()
 
 /**
- * 悬浮球拖拽（左右轨道模式）：横向只能停靠在左侧或右侧边缘两条轨道上，
- * 纵向自由拖动并夹紧在视口内；位置记忆，拖拽与点击用 6px 阈值区分。
+ * 悬浮球拖拽（全窗口自由模式）：可在视口内任意位置拖动停靠，
+ * 横纵都夹紧在可用区间内；位置记忆，拖拽与点击用 6px 阈值区分。
  */
 export function useDraggableFab(options: FabDragOptions, target: Ref<HTMLElement | null>) {
   const pos = reactive({ x: 0, y: 0 })
@@ -35,7 +35,7 @@ export function useDraggableFab(options: FabDragOptions, target: Ref<HTMLElement
   let justDragged = false
   let justDraggedTimer = 0
 
-  /** 停靠侧：由当前轨道决定，用于下拉面板、气泡换向 */
+  /** 停靠侧：球心落在视口哪半边，用于下拉面板、气泡换向 */
   const side = computed<'left' | 'right'>(() =>
     pos.x + size.w / 2 <= viewportW.value / 2 ? 'left' : 'right',
   )
@@ -51,31 +51,33 @@ export function useDraggableFab(options: FabDragOptions, target: Ref<HTMLElement
     size.h = el.offsetHeight
   }
 
+  function clampX(x: number) {
+    const maxX = Math.max(EDGE_MARGIN_PX, viewportW.value - size.w - EDGE_MARGIN_PX)
+    return Math.min(Math.max(x, EDGE_MARGIN_PX), maxX)
+  }
+
   function clampY(y: number) {
     const maxY = Math.max(EDGE_TOP_PX, window.innerHeight - size.h - EDGE_MARGIN_PX)
     return Math.min(Math.max(y, EDGE_TOP_PX), maxY)
   }
 
-  /** 归轨：按停靠侧把 x 钉在左/右边缘轨道上（缺省用当前停靠侧） */
-  function railX(target: 'left' | 'right' = side.value) {
-    return target === 'left' ? EDGE_MARGIN_PX : Math.max(EDGE_MARGIN_PX, viewportW.value - size.w - EDGE_MARGIN_PX)
-  }
-
-  /** 同轨道避让：与另一个悬浮球纵向重叠时，把自己推到它的上/下方 */
+  /** 重叠避让：与另一个悬浮球的矩形范围（含间距）重叠时，把自己推到它的上/下方 */
   function resolveOverlap() {
     for (const [key, other] of fabRegistry) {
       if (key === options.storageKey) continue
-      const sameRail = (pos.x < viewportW.value / 2) === (other.x < viewportW.value / 2)
-      if (!sameRail) continue
 
-      const gap = 16
-      const overlaps = pos.y < other.y + other.h + gap && other.y < pos.y + size.h + gap
-      if (!overlaps) continue
+      const horizontalOverlap =
+        pos.x < other.x + other.w + EDGE_MARGIN_PX && other.x < pos.x + size.w + EDGE_MARGIN_PX
+      if (!horizontalOverlap) continue
+
+      const verticalOverlap =
+        pos.y < other.y + other.h + 16 && other.y < pos.y + size.h + 16
+      if (!verticalOverlap) continue
 
       pos.y = clampY(
         pos.y + size.h / 2 <= other.y + other.h / 2
-          ? other.y - size.h - gap
-          : other.y + other.h + gap,
+          ? other.y - size.h - 16
+          : other.y + other.h + 16,
       )
     }
   }
@@ -98,9 +100,12 @@ export function useDraggableFab(options: FabDragOptions, target: Ref<HTMLElement
     if (!target.value) return
     measure()
 
-    // 旧存档可能停在屏幕中间或导航栏区域：按存档 x 归轨、y 夹进可用区间
-    const rail = (saved?.x ?? window.innerWidth - options.defaultAnchor.right) + size.w / 2 <= viewportW.value / 2 ? 'left' : 'right'
-    pos.x = railX(rail)
+    // 自由模式：存档位置原样恢复（旧版轨道存档也是合法坐标），越界时夹回可用区间
+    pos.x = clampX(
+      typeof saved?.x === 'number'
+        ? saved.x
+        : window.innerWidth - options.defaultAnchor.right - size.w,
+    )
     pos.y = clampY(typeof saved?.y === 'number' ? saved.y : window.innerHeight - options.defaultAnchor.bottom - size.h)
     resolveOverlap()
     placed.value = true
@@ -139,8 +144,8 @@ export function useDraggableFab(options: FabDragOptions, target: Ref<HTMLElement
       }
     }
     event.preventDefault()
-    // 横向只允许左右两条轨道：指针落在视口哪半边，球就停靠在哪条轨道
-    pos.x = railX(event.clientX < viewportW.value / 2 ? 'left' : 'right')
+    // 全窗口自由拖动：横纵都跟随指针，夹紧在视口可用区间内
+    pos.x = clampX(startPos.x + (event.clientX - startMouse.x))
     pos.y = clampY(startPos.y + dy)
   }
 
@@ -190,7 +195,7 @@ export function useDraggableFab(options: FabDragOptions, target: Ref<HTMLElement
     viewportW.value = window.innerWidth
     if (!placed.value) return
     measure()
-    const x = railX()
+    const x = clampX(pos.x)
     const y = clampY(pos.y)
     if (x !== pos.x || y !== pos.y) {
       pos.x = x
