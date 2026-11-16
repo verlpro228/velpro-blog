@@ -1,11 +1,18 @@
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 
-from ..config import get_settings
+from ..core.config import get_settings
+from ..core.rate_limit import SlidingWindowLimiter, limit_requests
 from ..schemas import ChatPayload
 
 router = APIRouter()
+
+# AI 接口直接消耗上游额度：按来源限流，正常对话远低于该频率，脚本刷则会被挡住
+chat_limiter = SlidingWindowLimiter(max_events=15, window_seconds=60)
+
+# 单次请求所有消息的总字符上限（正常带整篇文章上下文也只有几万字符）
+MAX_TOTAL_CHARS = 400_000
 
 
 def error_response(status_code: int, message: str) -> JSONResponse:
@@ -13,11 +20,18 @@ def error_response(status_code: int, message: str) -> JSONResponse:
     return JSONResponse(status_code=status_code, content={"error": {"message": message}})
 
 
-@router.post("/chat")
+@router.post("/chat", dependencies=[Depends(limit_requests(chat_limiter, "ai-chat"))])
 async def chat(payload: ChatPayload):
     messages = [{"role": m.role, "content": m.content} for m in payload.messages]
     if not messages:
         return error_response(400, "Missing chat messages.")
+
+    total_chars = sum(len(message["content"]) for message in messages)
+    if total_chars > MAX_TOTAL_CHARS:
+        return error_response(
+            400,
+            f"Messages too long: {total_chars} chars, limit is {MAX_TOTAL_CHARS}.",
+        )
 
     settings = get_settings()
     if not settings.longcat_api_key:

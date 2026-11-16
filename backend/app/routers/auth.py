@@ -1,17 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from ..database import get_db
+from ..core.deps import get_current_user, get_db
+from ..core.rate_limit import SlidingWindowLimiter, limit_requests
+from ..core.responses import ok
+from ..core.security import user_profile
 from ..models import User
-from ..rate_limit import SlidingWindowLimiter, limit_requests
-from ..schemas import LoginPayload, PasswordUpdatePayload, ProfileUpdatePayload, ok
-from ..security import (
-    create_access_token,
-    get_current_user,
-    hash_password,
-    user_profile,
-    verify_password,
-)
+from ..schemas import LoginPayload, PasswordUpdatePayload, ProfileUpdatePayload
+from ..services import auth as auth_service
 
 router = APIRouter()
 
@@ -21,13 +17,8 @@ login_limiter = SlidingWindowLimiter(max_events=10, window_seconds=300)
 
 @router.post("/login", dependencies=[Depends(limit_requests(login_limiter, "login"))])
 def login(payload: LoginPayload, db: Session = Depends(get_db)):
-    username = payload.username.strip()
-    user = db.query(User).filter(User.username == username).first()
-
-    if user is None or not verify_password(payload.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="账号或密码错误")
-
-    token = create_access_token(user)
+    user = auth_service.authenticate(db, payload)
+    token = auth_service.issue_token(user)
     return ok({"token": token, "userInfo": user_profile(user)})
 
 
@@ -42,11 +33,8 @@ def update_profile(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    user.name = payload.name.strip()
-    user.tagline = payload.tagline.strip()
-    db.commit()
-    db.refresh(user)
-    return ok(user_profile(user), "个人信息已更新")
+    updated = auth_service.update_profile(db, user, payload)
+    return ok(user_profile(updated), "个人信息已更新")
 
 
 @router.put("/password")
@@ -55,10 +43,5 @@ def update_password(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if not verify_password(payload.oldPassword, user.password_hash):
-        # 用 400 而非 401，避免前端拦截器误判为登录失效
-        raise HTTPException(status_code=400, detail="原密码不正确")
-
-    user.password_hash = hash_password(payload.newPassword)
-    db.commit()
+    auth_service.change_password(db, user, payload)
     return ok({"success": True}, "密码已更新，请重新登录")

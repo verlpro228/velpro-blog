@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT_DIR))
 
 from sqlalchemy import text
 
-from backend.app.database import SessionLocal
+from backend.app.core.database import SessionLocal
 
 TABLES = [
     ("docs", "create_time DESC, id"),

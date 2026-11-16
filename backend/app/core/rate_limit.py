@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import os
 import threading
 import time
 from collections.abc import Callable
@@ -53,10 +54,26 @@ class SlidingWindowLimiter:
 
 
 def client_ip(request: Request) -> str:
-    """取真实来源 IP；部署在 Vercel 等代理后时优先读 X-Forwarded-For。"""
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """取真实来源 IP。
+
+    转发头由客户端自行携带也可以伪造，因此只有在可信反向代理之后才采信：
+    Vercel 运行时（VERCEL 环境变量）或显式设置 TRUST_PROXY_HEADERS=1 时启用，
+    其余情况（本地直连 uvicorn）一律用 TCP 层的 request.client.host。
+    """
+    trust_proxy = bool(os.environ.get("VERCEL")) or os.environ.get("TRUST_PROXY_HEADERS") == "1"
+
+    if trust_proxy:
+        # Vercel 边缘网络写入，客户端无法覆盖
+        real_ip = request.headers.get("x-real-ip")
+        if real_ip and real_ip.strip():
+            return real_ip.strip()
+
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            # 形如 "客户端, 代理1, 代理2"：最左可能是客户端伪造值，取最右一跳
+            hops = [hop.strip() for hop in forwarded.split(",") if hop.strip()]
+            if hops:
+                return hops[-1]
 
     if request.client is not None:
         return request.client.host
