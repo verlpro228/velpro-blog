@@ -385,7 +385,7 @@ function applyTagFilter(tag: string) {
 }
 
 // ===== B1：文章 AI 总结（逻辑在 useAiSummary 单例，与右上角 AI 胶囊共享状态） =====
-const { aiSummary, aiSummaryState, aiSummaryError, aiSummaryCollapsed, generate: generateAiSummary, dismiss: dismissAiSummary, expand: expandAiSummary, refresh: refreshAiSummary, restoreFor: restoreAiSummaryFor } = useAiSummary()
+const { aiSummaryText, aiSummaryDocId, aiSummaryState, aiSummaryError, aiSummaryCollapsed, generate: generateAiSummary, dismiss: dismissAiSummary, expand: expandAiSummary, refresh: refreshAiSummary, restoreFor: restoreAiSummaryFor } = useAiSummary()
 
 async function handleLike() {
   const doc = currentDoc.value
@@ -702,7 +702,7 @@ onBeforeUnmount(() => {
                 </button>
               </div>
 
-              <div v-if="aiSummaryState !== 'idle'" class="knowledge-ai-summary mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+              <div v-if="aiSummaryState !== 'idle' && aiSummaryDocId === currentDoc?.id" class="knowledge-ai-summary mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
                 <div class="flex items-center justify-between gap-3">
                   <p class="flex items-center gap-2 text-sm font-semibold text-slate-800">
                     <svg class="h-4 w-4 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -735,7 +735,7 @@ onBeforeUnmount(() => {
                   <p v-if="aiSummaryError" class="mt-3 text-sm leading-6 text-rose-500">{{ aiSummaryError }}</p>
 
                   <p v-else class="ai-summary-content mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
-                    {{ aiSummary }}<span v-if="aiSummaryState === 'loading'" class="ai-summary-cursor" aria-hidden="true">▍</span>
+                    {{ aiSummaryText }}<span v-if="aiSummaryState === 'loading'" class="ai-summary-cursor" aria-hidden="true">▍</span>
                   </p>
 
                   <p class="mt-3 text-[11px] leading-4 text-slate-400">由 AI 生成，仅供参考；同一个会话内切换文章会保留各自的摘要。</p>

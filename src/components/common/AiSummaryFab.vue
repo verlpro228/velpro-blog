@@ -11,7 +11,7 @@ import { useDocsStore } from '@/store/modules/docs'
 const route = useRoute()
 const docsStore = useDocsStore()
 
-const { aiSummary, aiSummaryState, aiSummaryError, generate, refresh, copySummary } = useAiSummary()
+const { aiSummaryText, aiSummaryDocId, aiSummaryState, aiSummaryError, generate, refresh, copySummary } = useAiSummary()
 
 const isOpen = ref(false)
 const fabRef = ref<HTMLElement | null>(null)
@@ -163,19 +163,20 @@ watch(
         <p class="ai-summary-dropdown-doc">{{ currentDoc?.title }}</p>
 
         <div class="ai-summary-dropdown-body">
-          <p v-if="aiSummaryError" class="text-sm leading-6 text-rose-500">{{ aiSummaryError }}</p>
-          <p v-else class="whitespace-pre-wrap text-sm leading-7">
-            {{ aiSummary }}<span v-if="aiSummaryState === 'loading'" class="ai-summary-cursor" aria-hidden="true">▍</span>
+          <p v-if="aiSummaryError && aiSummaryDocId === currentDoc?.id" class="text-sm leading-6 text-rose-500">{{ aiSummaryError }}</p>
+          <p v-else-if="aiSummaryDocId === currentDoc?.id" class="whitespace-pre-wrap text-sm leading-7">
+            {{ aiSummaryText }}<span v-if="aiSummaryState === 'loading'" class="ai-summary-cursor" aria-hidden="true">▍</span>
           </p>
+          <p v-else class="text-sm leading-7 text-slate-400">暂无本篇摘要</p>
 
-          <p v-if="aiSummaryState === 'loading'" class="mt-2 text-[11px] text-slate-400">生成中，请稍候…</p>
+          <p v-if="aiSummaryState === 'loading' && aiSummaryDocId === currentDoc?.id" class="mt-2 text-[11px] text-slate-400">生成中，请稍候…</p>
         </div>
 
         <div class="ai-summary-dropdown-actions">
           <button
             type="button"
             class="ai-summary-action"
-            :disabled="aiSummaryState !== 'done'"
+            :disabled="aiSummaryState !== 'done' || aiSummaryDocId !== currentDoc?.id"
             title="复制摘要"
             @click="handleCopy"
           >
